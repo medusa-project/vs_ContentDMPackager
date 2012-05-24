@@ -15,32 +15,11 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "HistoricalMapsPlugin", "His
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PREMIS", "PREMIS\PREMIS.vbproj", "{164A9D55-4F5B-4B32-8D4C-90F044936FCA}"
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "HandleClient", "HandleClient\HandleClient.vbproj", "{A8B9F624-4EEA-47BA-9D45-60933CCE623A}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Handler", "Handler\Handler.vbproj", "{E13EFBD7-AAF9-46A4-A181-42303546C5DE}"
+EndProject
 Global
-	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 8
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = ContentDMPackager\\ContentDMPackager.vbproj
-		SccLocalPath1 = .
-		SccProjectFilePathRelativizedFromConnection1 = ContentDMPackager\\
-		SccProjectUniqueName2 = LDAP\\LDAP.vbproj
-		SccLocalPath2 = .
-		SccProjectFilePathRelativizedFromConnection2 = LDAP\\
-		SccProjectUniqueName3 = MetadataUtilities\\MetadataUtilities.vbproj
-		SccLocalPath3 = .
-		SccProjectFilePathRelativizedFromConnection3 = MetadataUtilities\\
-		SccProjectUniqueName4 = ContentDMPluginAPI\\ContentDMPluginAPI.vbproj
-		SccLocalPath4 = .
-		SccProjectFilePathRelativizedFromConnection4 = ContentDMPluginAPI\\
-		SccProjectUniqueName5 = AfricanMapsPlugin\\AfricanMapsPlugin.vbproj
-		SccLocalPath5 = .
-		SccProjectFilePathRelativizedFromConnection5 = AfricanMapsPlugin\\
-		SccProjectUniqueName6 = HistoricalMapsPlugin\\HistoricalMapsPlugin.vbproj
-		SccLocalPath6 = .
-		SccProjectFilePathRelativizedFromConnection6 = HistoricalMapsPlugin\\
-		SccProjectUniqueName7 = PREMIS\\PREMIS.vbproj
-		SccProjectName7 = \u0022$/ContentDMPackager.root/ContentDMPackager/PREMIS\u0022,\u0020ORLCAAAA
-		SccLocalPath7 = PREMIS
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -120,6 +99,26 @@ Global
 		{164A9D55-4F5B-4B32-8D4C-90F044936FCA}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{164A9D55-4F5B-4B32-8D4C-90F044936FCA}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{164A9D55-4F5B-4B32-8D4C-90F044936FCA}.Release|x86.ActiveCfg = Release|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A8B9F624-4EEA-47BA-9D45-60933CCE623A}.Release|x86.ActiveCfg = Release|Any CPU
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Debug|x86.ActiveCfg = Debug|x86
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Debug|x86.Build.0 = Debug|x86
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Release|Any CPU.ActiveCfg = Release|x86
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Release|Mixed Platforms.Build.0 = Release|x86
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Release|x86.ActiveCfg = Release|x86
+		{E13EFBD7-AAF9-46A4-A181-42303546C5DE}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

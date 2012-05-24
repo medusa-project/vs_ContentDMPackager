@@ -12,6 +12,7 @@ Imports System.Net
 Module Packager
   Const DEBUG_MAX_COUNT = 20 'Integer.MaxValue
   Private IdMap As New Dictionary(Of Integer, String)
+  Private HandleMap As New Dictionary(Of Uri, String)
 
   ''' <summary>
   ''' "Remember the Maine!"
@@ -21,6 +22,7 @@ Module Packager
 
     'need to deal with SSL
     ServicePointManager.ServerCertificateValidationCallback = AddressOf ValidateCert
+    ServicePointManager.DefaultConnectionLimit = 10
 
 
     'set working folder
@@ -59,6 +61,10 @@ Module Packager
       LoadIdMap(Path.Combine(ConfigurationManager.AppSettings.Item("WorkingFolder"), ConfigurationManager.AppSettings.Item("IdMapFile")))
     End If
 
+    If File.Exists(Path.Combine(ConfigurationManager.AppSettings.Item("WorkingFolder"), ConfigurationManager.AppSettings.Item("HandleMapFile"))) Then
+      LoadHandleMap(Path.Combine(ConfigurationManager.AppSettings.Item("WorkingFolder"), ConfigurationManager.AppSettings.Item("HandleMapFile")))
+    End If
+
     Dim xmlStr As String = FixExport(fileName)
 
     Dim xml As New XmlDocument
@@ -72,7 +78,7 @@ Module Packager
     'first process non-compound objects
     Console.Out.WriteLine("Processing simple objects...")
     For Each pg As CpdPage In cpd.Pages
-      Dim processor As New ContentDMRecordProcessor(collHandle, IdMap)
+      Dim processor As New ContentDMRecordProcessor(collHandle, IdMap, HandleMap)
       processor.ProcessRecord(xml.SelectSingleNode(String.Format("/metadata/record[contentdm_number='{0}']", pg.PagePtr)), Nothing)
       cnt = cnt + 1
       If cnt >= DEBUG_MAX_COUNT Then Exit For 'for debugging
@@ -81,13 +87,14 @@ Module Packager
     'next process compound objects
     Console.Out.WriteLine("Processing compound objects...")
     For Each nd As CpdNode In cpd.Nodes
-      Dim processor As New ContentDMRecordProcessor(collHandle, IdMap)
+      Dim processor As New ContentDMRecordProcessor(collHandle, IdMap, HandleMap)
       processor.ProcessRecord(xml.SelectSingleNode(String.Format("/metadata/record[contentdm_number='{0}']", nd.ContentDmNumber)), nd)
       cnt = cnt + 1
       If cnt >= DEBUG_MAX_COUNT Then Exit For 'for debugging
     Next
 
     SaveIdMap(Path.Combine(ConfigurationManager.AppSettings.Item("WorkingFolder"), ConfigurationManager.AppSettings.Item("IdMapFile")))
+    SaveHandleMap(Path.Combine(ConfigurationManager.AppSettings.Item("WorkingFolder"), ConfigurationManager.AppSettings.Item("HandleMapFile")))
 
   End Sub
 
@@ -101,12 +108,36 @@ Module Packager
     'End If
   End Sub
 
+  Private Sub SaveHandleMap(fileName As String)
+    'If Not File.Exists(fileName) Then
+    Dim fs As New StreamWriter(fileName)
+    For Each k In HandleMap
+      fs.WriteLine(String.Format("{1},{0}", k.Key, k.Value))
+    Next
+    fs.Close()
+    'End If
+  End Sub
+
   Private Sub LoadIdMap(filename As String)
     Dim fs As New StreamReader(filename)
     Do Until fs.EndOfStream
       Dim ln As String = fs.ReadLine
-      Dim parts() As String = ln.Split(",", 2, StringSplitOptions.RemoveEmptyEntries)
-      IdMap.Add(parts(0), parts(1))
+      If Not ln.StartsWith("#") Then
+        Dim parts() As String = ln.Split(",", 2, StringSplitOptions.RemoveEmptyEntries)
+        IdMap.Add(parts(0), parts(1))
+      End If
+    Loop
+    fs.Close()
+  End Sub
+
+  Private Sub LoadHandleMap(filename As String)
+    Dim fs As New StreamReader(filename)
+    Do Until fs.EndOfStream
+      Dim ln As String = fs.ReadLine
+      If Not ln.StartsWith("#") Then
+        Dim parts() As String = ln.Split(",", 2, StringSplitOptions.RemoveEmptyEntries)
+        HandleMap.Add(New Uri(parts(1)), parts(0))
+      End If
     Loop
     fs.Close()
   End Sub
@@ -155,16 +186,16 @@ Module Packager
 
     'Create a PREMIS metadata for the collection
     If String.IsNullOrWhiteSpace(collHandle) Then
-      collHandle = MetadataFunctions.GenerateHandle
+      collHandle = MetadataFunctions.GenerateLocalIdentifier
     End If
     Dim idType As String = "LOCAL"
-    If collHandle.StartsWith(ConfigurationManager.AppSettings.Item("HandlePrefix") & "/") Then
+    If collHandle.StartsWith(ConfigurationManager.AppSettings.Item("Handle.Prefix") & "/") Then
       idType = "HANDLE"
     End If
     Dim pObj As New PremisObject(idType, collHandle, PremisObjectCategory.Representation)
     pObj.ObjectIdentifiers.Add(New PremisIdentifier("URL", ConfigurationManager.AppSettings.Item("ContentDMCollectionURL")))
     Dim pContainer As PremisContainer = New PremisContainer(pObj)
-    pContainer.IDPrefix = collHandle & ConfigurationManager.AppSettings.Item("LocalIdSeparator")
+    pContainer.IDPrefix = collHandle & ConfigurationManager.AppSettings.Item("Handle.LocalIdSeparator")
 
     Dim currentAgent As PremisAgent = UIUCLDAPUser.GetPremisAgent
     currentAgent.AgentIdentifiers.Insert(0, pContainer.NextLocalIdentifier)

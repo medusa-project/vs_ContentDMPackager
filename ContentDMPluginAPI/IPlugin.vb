@@ -59,11 +59,22 @@ Public Class CatalogInfo
 End Class
 
 Public Class ImageInfo
-  Public Property Uri As String
+  Public Property UriStr As String
+    Get
+      Return Uri.ToString
+    End Get
+    Set(value As String)
+      Uri = New Uri(value)
+    End Set
+  End Property
+
   Public Property Format As String
 
+  Public Property Uri As Uri
+
+
   Public Sub New(url As String, form As String)
-    Uri = url
+    UriStr = url
     Format = form
   End Sub
 

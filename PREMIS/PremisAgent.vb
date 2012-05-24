@@ -119,6 +119,12 @@ Public Class PremisAgent
     Return fname
   End Function
 
+  Public ReadOnly Property EmailIdentifierValue As String
+    Get
+      Return AgentIdentifiers.Where(Function(id) id.IdentifierType = "EMAIL").FirstOrDefault.IdentifierValue
+    End Get
+  End Property
+
 End Class
 
 

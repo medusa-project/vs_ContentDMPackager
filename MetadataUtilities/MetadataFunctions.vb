@@ -35,26 +35,43 @@ Public Class MetadataFunctions
   End Function
 
   ''' <summary>
-  ''' Generate a new Medusa Handle which follows this syntax:  HandlePrefix/HandleProject:Guid-CheckDigit
+  ''' Generate a new Medusa Local Identifier which follows this syntax:  HandleProject:Guid-CheckDigit
   ''' </summary>
   ''' <returns>Handle</returns>
   ''' <remarks>HandlePrefix is optional.  A check digit is added to the end of the GUID using the Verhoeff algorithm</remarks>
-  Public Shared Function GenerateHandle() As String
-    Dim prefix As String = ConfigurationManager.AppSettings.Item("HandlePrefix")
-    Dim project As String = ConfigurationManager.AppSettings.Item("HandleProject")
+  Public Shared Function GenerateLocalIdentifier() As String
+    Dim project As String = ConfigurationManager.AppSettings.Item("Handle.Project")
     Dim uuid As Guid = Guid.NewGuid
 
-    If Not String.IsNullOrWhiteSpace(prefix) Then
-      prefix = prefix & "/"
-    Else
-      prefix = ""
-    End If
 
     Dim uuidStr As String = uuid.ToString.Replace("-", "")
     Dim checkD As Char = CheckDigit.GenerateCheckCharacter(uuidStr)
-    Dim handle As String = String.Format("{0}{1}:{2}-{3}", prefix, project, uuid.ToString, checkD)
+    Dim handle As String = String.Format("{1}:{2}-{3}", project, uuid.ToString, checkD)
 
     Return handle
+  End Function
+
+  ''' <summary>
+  ''' Given a complete handle, return just the local part (minus the registered handle prefix)
+  ''' </summary>
+  ''' <param name="handle"></param>
+  ''' <returns></returns>
+  ''' <remarks></remarks>
+  Public Shared Function GetLocalIdentifier(handle As String) As String
+    Dim re As New Regex("^\s*(\d+)/([^:]+:[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}-[A-F0-9](?:\.\d+)?)\s*$", RegexOptions.IgnoreCase)
+    Dim ret As String
+
+    Dim m As Match = re.Match(handle)
+
+    If m.Success Then
+      Dim prefix As String = m.Groups.Item(1).Value
+      Dim project As String = m.Groups.Item(2).Value
+      ret = project
+    Else
+      Throw New Exception("Invalid Handle: " & handle)
+    End If
+
+    Return ret
   End Function
 
   ''' <summary>
@@ -64,7 +81,7 @@ Public Class MetadataFunctions
   ''' <returns></returns>
   ''' <remarks>HandlePrefix is optional.</remarks>
   Public Shared Function ValidateHandle(ByVal handle As String) As Boolean
-    Dim re As New Regex("^\s*(?:(\d+)/)?([^:]+):([A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}-[A-F0-9])\s*$", RegexOptions.IgnoreCase)
+    Dim re As New Regex("^\s*(?:(\d+)/)?([^:]+):([A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}-[A-F0-9])(?:\.(\d+))?\s*$", RegexOptions.IgnoreCase)
 
     Dim m As Match = re.Match(handle)
 
@@ -72,12 +89,15 @@ Public Class MetadataFunctions
       Dim prefix As String = m.Groups.Item(1).Value
       Dim project As String = m.Groups.Item(2).Value
       Dim uuidPlusCheck As String = m.Groups.Item(3).Value
+      Dim localId As String = m.Groups.Item(4).Value
 
-      If prefix <> ConfigurationManager.AppSettings.Item("HandlePrefix") Then
+      If (Not String.IsNullOrWhiteSpace(prefix)) AndAlso prefix <> ConfigurationManager.AppSettings.Item("Handle.Prefix") Then
         Return False
-      ElseIf project <> ConfigurationManager.AppSettings.Item("HandleProject") Then
+      ElseIf project <> ConfigurationManager.AppSettings.Item("Handle.Project") Then
         Return False
       ElseIf CheckDigit.ValidateCheckCharacter(uuidPlusCheck.Replace("-", "")) = False Then
+        Return False
+      ElseIf (Not String.IsNullOrWhiteSpace(localId)) AndAlso (Not IsNumeric(localId)) Then
         Return False
       End If
     Else

@@ -13,6 +13,7 @@ Imports Uiuc.Library.Premis
 Imports Uiuc.Library.Ldap
 Imports Uiuc.Library.MetadataUtilities
 Imports Uiuc.Library.ContentDMPluginAPI
+Imports Uiuc.Library.HandleClient
 
 ''' <summary>
 ''' Process a single ContentDM record to create a Medusa Submission Package
@@ -35,6 +36,7 @@ Public Class ContentDMRecordProcessor
   Private collHandle As String
 
   Private IdMap As Dictionary(Of Integer, String)
+  Private HandleMap As Dictionary(Of Uri, String)
 
   Dim okFormats() As String = {"image/jp2", "image/tiff"}
 
@@ -48,9 +50,10 @@ Public Class ContentDMRecordProcessor
     'no public empty constructor is allowed
   End Sub
 
-  Sub New(ByVal collectionHandle As String, im As Dictionary(Of Integer, String))
+  Sub New(ByVal collectionHandle As String, im As Dictionary(Of Integer, String), hm As Dictionary(Of Uri, String))
     collHandle = collectionHandle
     IdMap = im
+    HandleMap = hm
     InitPlugin()
   End Sub
 
@@ -126,12 +129,12 @@ Public Class ContentDMRecordProcessor
       If Not MetadataFunctions.ValidateHandle(handle) Then Throw New Exception("Invalid Handle: " & handle)
     Else
       'Create a PREMIS metadata for the record
-      handle = MetadataFunctions.GenerateHandle
+      handle = MetadataFunctions.GenerateLocalIdentifier
       IdMap.Add(recNum, handle)
     End If
 
     Dim idType As String = "LOCAL"
-    If handle.StartsWith(ConfigurationManager.AppSettings.Item("HandlePrefix") & "/") Then
+    If handle.StartsWith(ConfigurationManager.AppSettings.Item("Handle.Prefix") & "/") Then
       idType = "HANDLE"
     End If
 
@@ -141,7 +144,7 @@ Public Class ContentDMRecordProcessor
     Dim pId As New PremisIdentifier("CONTENTDM_NUMBER", recNum)
     pRepresentation.ObjectIdentifiers.Add(pId)
     pContainer = New PremisContainer(pRepresentation)
-    pContainer.IDPrefix = handle & ConfigurationManager.AppSettings.Item("LocalIdSeparator")
+    pContainer.IDPrefix = handle & ConfigurationManager.AppSettings.Item("Handle.LocalIdSeparator")
 
     If compoundObject IsNot Nothing Then
       'Cycle thru all the compoundObject pages and assign them LOCAL Identifier values that will be used later
@@ -175,7 +178,7 @@ Public Class ContentDMRecordProcessor
     End If
 
     idType = "LOCAL"
-    If collHandle.StartsWith(ConfigurationManager.AppSettings.Item("HandlePrefix") & "/") Then
+    If collHandle.StartsWith(ConfigurationManager.AppSettings.Item("Handle.Prefix") & "/") Then
       idType = "HANDLE"
     End If
 
@@ -400,17 +403,17 @@ Public Class ContentDMRecordProcessor
     For Each nd As ImageInfo In arcs
       Dim pEvt As New PremisEvent("LOCAL", pContainer.NextID, "CAPTURE")
       pEvt.LinkToAgent(pCurrentAgent)
-      If nd.Uri.EndsWith(".cpd") Then
-        pEvt.EventDetail = String.Format("Fetching Compound Object File from URL: {0}", nd.Uri)
+      If nd.UriStr.EndsWith(".cpd") Then
+        pEvt.EventDetail = String.Format("Fetching Compound Object File from URL: {0}", nd.UriStr)
       Else
-        pEvt.EventDetail = String.Format("Fetching Production Master Image from URL: {0}", nd.Uri)
+        pEvt.EventDetail = String.Format("Fetching Production Master Image from URL: {0}", nd.UriStr)
       End If
 
       pContainer.Events.Add(pEvt)
 
       Dim pObjChars As New PremisObjectCharacteristics(nd.Format)
 
-      Dim arcFile As String = FetchURL(nd.Uri, pEvt, pObjChars)
+      Dim arcFile As String = FetchURL(nd.UriStr, pEvt, pObjChars)
       arcFiles.Add(arcFile)
 
       If (Not okFormats.Contains(nd.Format)) And nd.Format.StartsWith("image/") Then
@@ -422,11 +425,11 @@ Public Class ContentDMRecordProcessor
 
       If Not String.IsNullOrWhiteSpace(arcFile) Then
 
-        If nd.Uri.EndsWith(".cpd") Then
+        If nd.UriStr.EndsWith(".cpd") Then
 
           Dim pObj2 As New PremisObject("FILENAME", arcFile, PremisObjectCategory.File, pObjChars)
           pObj2.PreservationLevels.Add(New PremisPreservationLevel("ORIGINAL_METADATA_FILE", Now))
-          pObj2.ObjectIdentifiers.Add(New PremisIdentifier("URL", nd.Uri))
+          pObj2.ObjectIdentifiers.Add(New PremisIdentifier("URL", nd.UriStr))
           pObj2.ObjectIdentifiers.Insert(0, pContainer.NextLocalIdentifier)
           pObj2.OriginalName = arcFile
 
@@ -452,7 +455,7 @@ Public Class ContentDMRecordProcessor
           Dim pObj As New PremisObject("FILENAME", arcFile, PremisObjectCategory.File, pObjChars)
           pObj.PreservationLevels.Add(New PremisPreservationLevel("ORIGINAL_CONTENT_FILE", Now))
           pObj.OriginalName = arcFile
-          pObj.ObjectIdentifiers.Add(New PremisIdentifier("URL", nd.Uri))
+          pObj.ObjectIdentifiers.Add(New PremisIdentifier("URL", nd.UriStr))
           pObj.ObjectIdentifiers.Insert(0, pContainer.NextLocalIdentifier)
 
           'rename the file to use the uuid
@@ -464,6 +467,32 @@ Public Class ContentDMRecordProcessor
           pContainer.Objects.Add(pObj)
           parent.RelateToObject(relat, subRelat, pObj)
           pObj.RelateToObject(relat, "PARENT", parent)
+
+          'register a handle for the URI if not already done
+          Dim handle As String
+          Dim local_id As String
+          If HandleMap.ContainsKey(nd.Uri) Then
+            'use the already registered handle 
+            handle = HandleMap.Item(nd.Uri)
+            local_id = MetadataFunctions.GetLocalIdentifier(handle)
+          Else
+            local_id = pObj.LocalIdentifierValue
+          End If
+
+          'Register a new handle for the image, if needed
+          Dim hc As HandleClient.HandleClient = HandleClient.HandleClient.CreateUpdateUrlHandle(local_id, nd.Uri.ToString, pCurrentAgent.EmailIdentifierValue, _
+                                                                                          String.Format("Collection: {0}", ConfigurationManager.AppSettings.Item("ContentDMCollectionName")))
+          handle = hc.handle_value
+          If Not MetadataFunctions.ValidateHandle(handle) Then Throw New Exception("Invalid Handle: " & handle)
+
+          If Not HandleMap.ContainsKey(nd.Uri) Then HandleMap.Add(nd.Uri, handle)
+          pObj.ObjectIdentifiers.Add(New PremisIdentifier("HANDLE", handle))
+
+          Dim hEvt As PremisEvent = hc.GetPremisEvent(New PremisIdentifier("LOCAL", pContainer.NextID))
+          hEvt.LinkToObject(pObj)
+          hEvt.LinkToAgent(pCurrentAgent)
+
+
         End If
 
       End If
@@ -557,6 +586,12 @@ Public Class ContentDMRecordProcessor
     Return ret
   End Function
 
+  ''' <summary>
+  ''' Capture the access image; the image re ndered in default web pages (may not be the same as the archival master)
+  ''' </summary>
+  ''' <param name="masterFile"></param>
+  ''' <returns></returns>
+  ''' <remarks>NOTE:  This function not currently used; we only capture the archival quality images</remarks>
   Private Function CaptureAccessImage(ByVal masterFile As String) As List(Of String)
     Dim rootPath As String = Path.GetPathRoot(ConfigurationManager.AppSettings.Item("ContentDMDataDir"))
     Dim retFiles As New List(Of String)
@@ -605,6 +640,12 @@ Public Class ContentDMRecordProcessor
     Return retFiles
   End Function
 
+  ''' <summary>
+  ''' Capture a thumbnail image for the object
+  ''' </summary>
+  ''' <param name="masterFile"></param>
+  ''' <returns></returns>
+  ''' <remarks>NOTE:  this function is not currently used; only the archival master is captured</remarks>
   Private Function CaptureThumbImage(ByVal masterFile As String) As List(Of String)
     Dim rootPath As String = Path.GetPathRoot(ConfigurationManager.AppSettings.Item("ContentDMDataDir"))
     Dim retFiles As New List(Of String)
