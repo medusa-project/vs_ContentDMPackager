@@ -17,11 +17,13 @@ Public Class PremisObjectCharacteristics
 
   Public Property CreatingApplications As List(Of PremisCreatingApplication)
 
-  Protected Sub New()
-    'no public empty constuctors allowed
+  Public Property ObjectCharacteristicsExtensions As List(Of XmlDocument)
+
+  Public Sub New()
     Fixities = New List(Of PremisFixity)
     Formats = New List(Of PremisFormat)
     CreatingApplications = New List(Of PremisCreatingApplication)
+    ObjectCharacteristicsExtensions = New List(Of XmlDocument)
   End Sub
 
   Public Sub New(ByVal formatName As String)
@@ -38,6 +40,7 @@ Public Class PremisObjectCharacteristics
     Formats = New List(Of PremisFormat)
     CreatingApplications = New List(Of PremisCreatingApplication)
     Formats.Add(format)
+    ObjectCharacteristicsExtensions = New List(Of XmlDocument)
   End Sub
 
   Public Sub GetXML(ByVal xmlwr As XmlWriter)
@@ -59,6 +62,12 @@ Public Class PremisObjectCharacteristics
 
     For Each creApp As PremisCreatingApplication In CreatingApplications
       creApp.GetXML(xmlwr)
+    Next
+
+    For Each ext As XmlDocument In ObjectCharacteristicsExtensions
+      xmlwr.WriteStartElement("objectCharacteristicsExtension")
+      xmlwr.WriteNode(ext.CreateNavigator, False)
+      xmlwr.WriteEndElement()
     Next
 
     xmlwr.WriteEndElement()
