@@ -2,6 +2,7 @@
 Imports System.IO
 Imports System.Configuration
 Imports System.Xml
+Imports System.Text.RegularExpressions
 
 Public MustInherit Class Plugin
   Implements IPlugin
@@ -39,6 +40,8 @@ Public MustInherit Class Plugin
     catID = catID.Replace("_", ".")
 
     Dim url As String = String.Format(ConfigurationManager.AppSettings.Item("GetMarcUrl"), catID)
+
+    url = Regex.Replace(url, "\.\.opac$", ".opac")
 
     Dim ret As New CatalogInfo(url, catID)
 

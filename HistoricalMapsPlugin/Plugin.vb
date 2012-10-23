@@ -164,7 +164,7 @@ Public Class Plugin
   End Function
 
   Public Overrides Function TestRecord(record As System.Xml.XmlNode) As Boolean
-    Dim nd As XmlElement = record.SelectSingleNode("item_url")
+    Dim nd As XmlElement = record.SelectSingleNode("item_url|reference_url")
 
     Dim req As HttpWebRequest = WebRequest.Create(nd.InnerText)
     Dim rsp As HttpWebResponse = Nothing

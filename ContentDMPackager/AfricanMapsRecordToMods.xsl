@@ -183,7 +183,7 @@
                   <xsl:attribute name="dateLastAccessed">
                     <xsl:value-of select="$current-date"/>
                   </xsl:attribute>
-                  <xsl:value-of select="item_url"/>
+                  <xsl:value-of select="item_url|reference_url"/>
                 </xsl:element>
             </xsl:element>
             

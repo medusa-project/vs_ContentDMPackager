@@ -38,10 +38,18 @@ Public Class HandleClient
     Return hc
   End Function
 
-  Public Shared Function CreateUpdateUrlHandle(local_id As String, target As String, email As String, desc As String) As HandleClient
+  Public Shared Function CreateUpdateHandle(local_id As String, target As String, email As String, desc As String) As HandleClient
     Dim hc As New HandleClient()
     Dim ret As HttpStatusCode
     Dim update As Boolean = False
+
+    Dim target_type As TargetType
+    Dim u As New Uri(target)
+    If u.Scheme.ToLower = "file" Then
+      target_type = TargetType.FILE
+    Else
+      target_type = TargetType.URL
+    End If
 
     hc.local_id = local_id
 
@@ -50,9 +58,9 @@ Public Class HandleClient
     ret = hc.Retrieve()
     hc.dotrace = True
     If ret = HttpStatusCode.OK Then
-      If hc.target_type <> TargetType.URL Then
-        hc.updated_fields = String.Format("target_type: '{1}'=>'{2}', ", hc.updated_fields, hc.target_type, TargetType.URL)
-        hc.target_type = TargetType.URL
+      If hc.target_type <> target_type Then
+        hc.updated_fields = String.Format("target_type: '{1}'=>'{2}', ", hc.updated_fields, hc.target_type, target_type)
+        hc.target_type = target_type
         update = True
       End If
       If target IsNot Nothing AndAlso hc.target <> target Then
@@ -71,15 +79,21 @@ Public Class HandleClient
         update = True
       End If
       If update = True Then
-        ret = hc.Update
+        'delete old record and add new one (hc.update doesn't always seem to operate as expected)
+        ret = hc.Delete
+        hc.target_type = target_type
+        hc.target = target
+        hc.email = email
+        hc.desc = desc
+        ret = hc.Create
       End If
     Else
-      hc.target_type = TargetType.URL
+      hc.target_type = target_type
       hc.target = target
       hc.email = email
       hc.desc = desc
       ret = hc.Create
-      hc.updated_fields = String.Format("target_type: '{0}', target: '{1}', email: '{2}', desc: '{3}'", TargetType.URL, target, email, desc)
+      hc.updated_fields = String.Format("target_type: '{0}', target: '{1}', email: '{2}', desc: '{3}'", target_type, target, email, desc)
     End If
 
     Return hc

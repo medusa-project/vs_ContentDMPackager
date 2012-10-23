@@ -36,7 +36,7 @@ Public Class ContentDMRecordProcessor
   Private collHandle As String
 
   Private IdMap As Dictionary(Of Integer, String)
-  Private HandleMap As Dictionary(Of Uri, String)
+  Private HandleMap As Dictionary(Of Uri, KeyValuePair(Of Integer, String))
 
   Dim okFormats() As String = {"image/jp2", "image/tiff"}
 
@@ -50,7 +50,7 @@ Public Class ContentDMRecordProcessor
     'no public empty constructor is allowed
   End Sub
 
-  Sub New(ByVal collectionHandle As String, im As Dictionary(Of Integer, String), hm As Dictionary(Of Uri, String))
+  Sub New(ByVal collectionHandle As String, im As Dictionary(Of Integer, String), hm As Dictionary(Of Uri, KeyValuePair(Of Integer, String)))
     collHandle = collectionHandle
     IdMap = im
     HandleMap = hm
@@ -473,19 +473,19 @@ Public Class ContentDMRecordProcessor
           Dim local_id As String
           If HandleMap.ContainsKey(nd.Uri) Then
             'use the already registered handle 
-            handle = HandleMap.Item(nd.Uri)
+            handle = HandleMap.Item(nd.Uri).Value
             local_id = MetadataFunctions.GetLocalIdentifier(handle)
           Else
             local_id = pObj.LocalIdentifierValue
           End If
 
           'Register a new handle for the image, if needed
-          Dim hc As HandleClient.HandleClient = HandleClient.HandleClient.CreateUpdateUrlHandle(local_id, nd.Uri.ToString, pCurrentAgent.EmailIdentifierValue, _
+          Dim hc As HandleClient.HandleClient = HandleClient.HandleClient.CreateUpdateHandle(local_id, nd.Uri.ToString, pCurrentAgent.EmailIdentifierValue, _
                                                                                           String.Format("Collection: {0}", ConfigurationManager.AppSettings.Item("ContentDMCollectionName")))
           handle = hc.handle_value
           If Not MetadataFunctions.ValidateHandle(handle) Then Throw New Exception("Invalid Handle: " & handle)
 
-          If Not HandleMap.ContainsKey(nd.Uri) Then HandleMap.Add(nd.Uri, handle)
+          If Not HandleMap.ContainsKey(nd.Uri) Then HandleMap.Add(nd.Uri, New KeyValuePair(Of Integer, String)(recNum, handle))
           pObj.ObjectIdentifiers.Add(New PremisIdentifier("HANDLE", handle))
 
           Dim hEvt As PremisEvent = hc.GetPremisEvent(New PremisIdentifier("LOCAL", pContainer.NextID))

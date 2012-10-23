@@ -8,6 +8,12 @@ Public MustInherit Class PremisEntity
 
   Public MustOverride Function GetDefaultFileName(prefix As String, ext As String) As String
 
+  ''' <summary>
+  ''' Return just the index suffix part of a local identifier, i.e. for the identifier "MEDUSA:XX-XXX-XX-XXX=X.00005" this function
+  ''' would return "00005"
+  ''' </summary>
+  ''' <returns></returns>
+  ''' <remarks></remarks>
   Public Function GetDefaultFileNameIndex() As String
     Return Path.GetExtension(Me.GetDefaultFileName("", "")).TrimStart(".")
   End Function

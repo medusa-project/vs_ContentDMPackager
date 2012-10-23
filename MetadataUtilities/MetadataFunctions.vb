@@ -46,7 +46,7 @@ Public Class MetadataFunctions
 
     Dim uuidStr As String = uuid.ToString.Replace("-", "")
     Dim checkD As Char = CheckDigit.GenerateCheckCharacter(uuidStr)
-    Dim handle As String = String.Format("{1}:{2}-{3}", project, uuid.ToString, checkD)
+    Dim handle As String = String.Format("{0}:{1}-{2}", project, uuid.ToString, checkD)
 
     Return handle
   End Function
@@ -117,8 +117,13 @@ Public Class MetadataFunctions
   ''' <remarks>This function uses the same function used by IE to detect MIME types.  
   ''' See MSDN article titled "MIME Type Detection in Internet Explorer" However, there is one (at least)
   ''' non-standard behavior.  It returns image/pjpeg for JPEG images.  It should just be image/jpeg,
-  ''' this function will correct it.</remarks>
+  ''' this function will correct it.  
+  ''' See <a href="http://msdn.microsoft.com/en-us/library/ms775147%28VS.85%29.aspx#Known_MimeTypes">List of detected MIME Types</a>.</remarks>
   Public Shared Function GetMimeFromFile(ByVal fileName As String, ByVal proposedMime As String) As String
+
+    If String.IsNullOrWhiteSpace(proposedMime) OrElse proposedMime.ToLower = "application/octet-stream" OrElse proposedMime.ToLower = "binary/octet-stream" Then
+      proposedMime = GetContentType(fileName)
+    End If
 
     Dim mimeout As String = ""
     Dim MaxContent As Integer
@@ -136,7 +141,7 @@ Public Class MetadataFunctions
     fs.Read(buf, 0, MaxContent)
     fs.Close()
 
-    result = FindMimeFromData(IntPtr.Zero, fileName, buf, MaxContent, proposedMime, 0, mimeout, 0)
+    result = FindMimeFromData(IntPtr.Zero, fileName, buf, MaxContent, proposedMime, &H1 + &H20 + &H2, mimeout, 0)
 
     'correct non-standard mimes that IE reports
     If mimeout = "image/pjpeg" Then
@@ -149,6 +154,23 @@ Public Class MetadataFunctions
 
   End Function
 
+  ''' <summary>
+  ''' Same as GetMimeFromFile except it uses the file extension to lookup the mime from the registry
+  ''' </summary>
+  ''' <param name="fileName"></param>
+  ''' <returns></returns>
+  ''' <remarks></remarks>
+  Public Shared Function GetContentType(fileName As String) As String
+    Dim contentType As String = "application/octet-stream"
+    Dim ext As String = System.IO.Path.GetExtension(fileName).ToLower()
+    Dim registryKey As Microsoft.Win32.RegistryKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(ext)
+    If registryKey IsNot Nothing AndAlso registryKey.GetValue("Content Type") IsNot Nothing Then
+      contentType = registryKey.GetValue("Content Type").ToString()
+    End If
+    Return contentType
+  End Function
+
+
   Public Shared Function BytesToHexStr(ByVal bytes() As Byte) As String
     Dim str As StringBuilder = New StringBuilder
     Dim i As Integer = 0
@@ -159,4 +181,31 @@ Public Class MetadataFunctions
     Return str.ToString
   End Function
 
+  ''' <summary>
+  ''' Given a complete content-type, such as 'type/sub-type' value return just the 'type'
+  ''' </summary>
+  ''' <param name="mime"></param>
+  ''' <returns></returns>
+  ''' <remarks></remarks>
+  Public Shared Function MimeType(mime As String) As String
+    Dim delim() As Char = {"/"}
+    Dim parts = mime.Split(delim, 2)
+    Return parts(0)
+  End Function
+
+  ''' <summary>
+  ''' Given a complete content-type, such as 'type/sub-type' value return just the 'sub-type'
+  ''' </summary>
+  ''' <param name="mime"></param>
+  ''' <returns></returns>
+  ''' <remarks></remarks>
+  Public Shared Function MimeSubType(mime As String) As String
+    Dim delim() As Char = {"/"}
+    Dim parts = mime.Split(delim, 2)
+    If parts.Count = 2 Then
+      Return parts(1)
+    Else
+      Return ""
+    End If
+  End Function
 End Class

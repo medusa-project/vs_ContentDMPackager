@@ -10,9 +10,9 @@ Imports Uiuc.Library.Ldap
 Imports System.Net
 
 Module Packager
-  Const DEBUG_MAX_COUNT = 20 'Integer.MaxValue
+  Const DEBUG_MAX_COUNT = 1000000 'Integer.MaxValue
   Private IdMap As New Dictionary(Of Integer, String)
-  Private HandleMap As New Dictionary(Of Uri, String)
+  Private HandleMap As New Dictionary(Of Uri, KeyValuePair(Of Integer, String))
 
   ''' <summary>
   ''' "Remember the Maine!"
@@ -112,7 +112,7 @@ Module Packager
     'If Not File.Exists(fileName) Then
     Dim fs As New StreamWriter(fileName)
     For Each k In HandleMap
-      fs.WriteLine(String.Format("{1},{0}", k.Key, k.Value))
+      fs.WriteLine(String.Format("{0},{1},{2}", k.Value.Key, k.Key, k.Value.Value))
     Next
     fs.Close()
     'End If
@@ -135,8 +135,8 @@ Module Packager
     Do Until fs.EndOfStream
       Dim ln As String = fs.ReadLine
       If Not ln.StartsWith("#") Then
-        Dim parts() As String = ln.Split(",", 2, StringSplitOptions.RemoveEmptyEntries)
-        HandleMap.Add(New Uri(parts(1)), parts(0))
+        Dim parts() As String = ln.Split(",", 3, StringSplitOptions.RemoveEmptyEntries)
+        HandleMap.Add(New Uri(parts(1)), New KeyValuePair(Of Integer, String)(parts(0), parts(2)))
       End If
     Loop
     fs.Close()
@@ -259,11 +259,53 @@ Module Packager
   ''' <returns></returns>
   ''' <remarks></remarks>
   Private Function FixExport(ByVal fname As String) As String
-    Dim strRdr As New StreamReader(fname, True)
+    Dim strRdr = New StreamReader(fname, True)
+    Dim c() As Char = {";"}
+    Dim str As String
 
-    Dim str As String = strRdr.ReadToEnd
+    If Path.GetExtension(fname) = ".txt" Then
+      'this is a tab-delimited file, read it and convert it into a xml
+      Dim hdr As String = strRdr.ReadLine
+      Dim cols() As String = hdr.Split(vbTab)
 
-    strRdr.Close()
+      For i = 0 To cols.Count - 1
+        cols(i) = cols(i).ToLower
+        cols(i) = Regex.Replace(cols(i), "[^a-z]+", "_").Trim("_")
+      Next
+
+      Dim sb As New StringBuilder
+      Dim xwr = XmlWriter.Create(sb)
+      xwr.WriteStartElement("metadata")
+      Do Until strRdr.EndOfStream = True
+        xwr.WriteStartElement("record")
+        Dim ln As String = strRdr.ReadLine
+        Dim lns() As String = ln.Split(vbTab)
+        For i = 0 To lns.Count - 1
+          Dim parts = lns(i).Split(c, StringSplitOptions.RemoveEmptyEntries)
+          If parts.Count > 0 Then
+            For Each part In parts
+              xwr.WriteElementString(cols(i), part)
+            Next
+          Else
+            xwr.WriteElementString(cols(i), lns(i))
+          End If
+        Next
+          xwr.WriteEndElement()
+      Loop
+      xwr.WriteEndElement()
+      xwr.Close()
+
+      str = sb.ToString
+
+    ElseIf Path.GetExtension(fname) = ".xml" Then
+      'this is an xml file, so just read it
+      str = strRdr.ReadToEnd
+
+      strRdr.Close()
+
+    Else
+      Throw New Exception("Unexpected file extension must be either .txt or .xml")
+    End If
 
     Dim re As New Regex("&amp</([^>]+)>\s+<\1>")
 

@@ -30,6 +30,20 @@ Public Class UIUCLDAPUser
   End Function
 
   ''' <summary>
+  ''' Parse a qualified id (domain\id) and return just the domain part
+  ''' </summary>
+  ''' <param name="s"></param>
+  ''' <returns></returns>
+  ''' <remarks></remarks>
+  Public Shared Function GetDomainFromQualifiedID(ByVal s As String) As String
+    If s.Contains("\") Then
+      Return s.Substring(0, s.IndexOf("\"))
+    Else
+      Return ""
+    End If
+  End Function
+
+  ''' <summary>
   ''' Return a PREMIS Agent object for the given NetID
   ''' </summary>
   ''' <param name="netid"></param>

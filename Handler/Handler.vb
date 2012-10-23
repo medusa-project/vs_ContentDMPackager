@@ -5,7 +5,7 @@ Imports System.IO
 Imports System.Net
 
 Module Handler
-  Private HandleMap As New Dictionary(Of Uri, String)
+  Private HandleMap As New Dictionary(Of String, Uri)
 
   Public Function Main(ByVal args() As String) As Integer
 
@@ -43,14 +43,21 @@ Module Handler
 
   End Sub
 
+  ''' <summary>
+  ''' Load the HandleMap file
+  ''' </summary>
+  ''' <param name="filepath"></param>
+  ''' <remarks>The format of the file must be id,uri,handle.  The id is ignored.</remarks>
   Private Sub LoadHandleMap(filepath As String)
     Dim fs As New StreamReader(filepath)
 
     Do Until fs.EndOfStream
       Dim ln As String = fs.ReadLine
       If Not ln.StartsWith("#") Then
-        Dim parts() As String = ln.Split(",", 2, StringSplitOptions.RemoveEmptyEntries)
-        HandleMap.Add(New Uri(parts(1)), parts(0))
+        Dim parts() As String = ln.Split(",", 3, StringSplitOptions.RemoveEmptyEntries)
+        Dim u As New Uri(parts(1))
+        Dim h As String = parts(2)
+        HandleMap.Add(h, u)
       End If
     Loop
     fs.Close()
@@ -59,7 +66,7 @@ Module Handler
 
   Private Sub ProcessDelete()
     For Each k In HandleMap.Keys
-      Dim local_id As String = MetadataFunctions.GetLocalIdentifier(HandleMap.Item(k))
+      Dim local_id As String = MetadataFunctions.GetLocalIdentifier(k)
       Dim hc As HandleClient = HandleClient.DeleteHandle(local_id)
       DoOutput(hc)
     Next
@@ -68,8 +75,8 @@ Module Handler
 
   Private Sub ProcessUpdate()
     For Each k In HandleMap.Keys
-      Dim local_id As String = MetadataFunctions.GetLocalIdentifier(HandleMap.Item(k))
-      Dim hc As HandleClient = HandleClient.CreateUpdateUrlHandle(local_id, k.ToString, Nothing, Nothing)
+      Dim local_id As String = MetadataFunctions.GetLocalIdentifier(k)
+      Dim hc As HandleClient = HandleClient.CreateUpdateHandle(local_id, HandleMap.Item(k).ToString, Nothing, Nothing)
       DoOutput(hc)
     Next
 
