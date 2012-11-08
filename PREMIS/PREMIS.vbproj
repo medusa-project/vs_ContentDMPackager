@@ -106,6 +106,7 @@
     <Compile Include="PremisRights.vb" />
     <Compile Include="PremisRightsGranted.vb" />
     <Compile Include="PremisRightsStatement.vb" />
+    <Compile Include="PremisSignificantProperties.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

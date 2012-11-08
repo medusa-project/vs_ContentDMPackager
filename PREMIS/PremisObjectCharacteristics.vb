@@ -75,10 +75,12 @@ Public Class PremisObjectCharacteristics
   End Sub
 
   Public Shared Function CharacterizeFile(ByVal filepath As String, ByVal proposedMime As String) As PremisObjectCharacteristics
+    'TODO: Make the FITS utility an option for this
+
     Dim strm As Stream = File.OpenRead(filepath)
     Dim pObjChar As New PremisObjectCharacteristics()
 
-    Dim alg As String = ConfigurationManager.AppSettings.Item("ChecksumAlgorithm")
+    Dim alg As String = MedusaAppSettings.Settings.ChecksumAlgorithm
     Dim sha1 As HashAlgorithm = HashAlgorithm.Create(alg)
 
     Dim hash() As Byte = sha1.ComputeHash(strm)

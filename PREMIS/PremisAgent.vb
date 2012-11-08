@@ -20,6 +20,25 @@ Public Class PremisAgent
 
   Public Property XmlId As String
 
+  Public Shared Function GetCurrentSoftwareAgent(idtype As String, idvalue As String) As PremisAgent
+
+    Dim softAgent As New PremisAgent(idtype, idvalue)
+    softAgent.AgentType = "SOFTWARE"
+    softAgent.AgentNames.Add(String.Format("{0} {1} [{2}]",
+                                     My.Application.Info.Title, My.Application.Info.Version, My.Application.Info.CompanyName))
+
+    softAgent.AgentNotes.Add(String.Format("Run on Computer: {0}, {1} V{2}, {3}",
+                                      My.Computer.Name, My.Computer.Info.OSFullName.Trim,
+                                     My.Computer.Info.OSVersion, My.Application.UICulture.EnglishName))
+
+    Return softAgent
+  End Function
+
+  Public Shared Function GetCurrentUserAgent(idtype As String, idvalue As String) As PremisAgent
+    'TODO: This function maybe ?
+    Return Nothing
+  End Function
+
   Public Sub LinkToEvent(ByVal evt As PremisEvent)
     LinkedEvents.Add(evt)
     'Reverse link

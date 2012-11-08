@@ -24,6 +24,8 @@ Public Class PremisObject
 
   Public Property Relationships As List(Of PremisRelationship)
 
+  Public Property SignificantProperties As List(Of PremisSignificantProperties)
+
   Public Property XmlId As String
 
   Public Sub LinkToEvent(ByVal evt As PremisEvent)
@@ -107,6 +109,7 @@ Public Class PremisObject
     LinkedRightsStatements = New List(Of PremisRightsStatement)
     LinkedIntellectualEntityIdentifiers = New List(Of PremisIdentifier)
     Relationships = New List(Of PremisRelationship)
+    SignificantProperties = New List(Of PremisSignificantProperties)
   End Sub
 
   Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer)
@@ -126,6 +129,10 @@ Public Class PremisObject
 
     For Each lvl As PremisPreservationLevel In PreservationLevels
       lvl.GetXML(xmlwr)
+    Next
+
+    For Each sProp As PremisSignificantProperties In SignificantProperties
+      sProp.GetXML(xmlwr)
     Next
 
     For Each objChar As PremisObjectCharacteristics In ObjectCharacteristics
