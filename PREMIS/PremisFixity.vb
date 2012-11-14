@@ -8,6 +8,29 @@ Public Class PremisFixity
   Public Property MessageDigest As String
   Public Property MessageDigestOriginator As String
 
+  Public Sub New(elem As XmlElement)
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:messageDigestAlgorithm", xmlns)
+    For Each nd As XmlElement In nds
+      MessageDigestAlgorithm = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:messageDigest", xmlns)
+    For Each nd As XmlElement In nds
+      MessageDigest = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:messageDigestOriginator", xmlns)
+    For Each nd As XmlElement In nds
+      MessageDigestOriginator = nd.InnerText
+    Next
+
+  End Sub
+
 
   Protected Sub New()
     'no empty constuctors allowed

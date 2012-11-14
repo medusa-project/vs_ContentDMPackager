@@ -16,6 +16,46 @@ Public Class PremisFormat
 
   Public Property FormatNotes As List(Of String)
 
+  Public Sub New(elem As XmlElement)
+    FormatNotes = New List(Of String)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:formatDesignation/premis:formatName", xmlns)
+    For Each nd As XmlElement In nds
+      FormatName = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:formatDesignation/premis:formatVersion", xmlns)
+    For Each nd As XmlElement In nds
+      FormatVersion = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:formatRegistry/premis:formatRegistryName", xmlns)
+    For Each nd As XmlElement In nds
+      FormatRegistryName = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:formatRegistry/premis:formatRegistryKey", xmlns)
+    For Each nd As XmlElement In nds
+      FormatRegistryKey = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:formatRegistry/premis:formatRegistryRole", xmlns)
+    For Each nd As XmlElement In nds
+      FormatRegistryRole = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:formatNote", xmlns)
+    For Each nd As XmlElement In nds
+      FormatNotes.Add(nd.InnerText)
+    Next
+
+  End Sub
+
 
   Protected Sub New()
     'no empty constuctors allowed

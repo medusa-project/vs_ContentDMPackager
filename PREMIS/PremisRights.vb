@@ -8,7 +8,22 @@ Public Class PremisRights
 
   Public Property RightsStatements As List(Of PremisRightsStatement)
 
-  Public Property XmlId As String
+  Public Sub New(elem As XmlElement)
+    RightsStatements = New List(Of PremisRightsStatement)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:rightsStatement", xmlns)
+    For Each nd As XmlElement In nds
+      RightsStatements.Add(New PremisRightsStatement(nd))
+    Next
+
+
+    XmlId = elem.GetAttribute("xmlID")
+  End Sub
 
   Protected Sub New()
     'no empty constuctors allowed
@@ -21,7 +36,7 @@ Public Class PremisRights
   End Sub
 
   Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer)
-    xmlwr.WriteStartElement("rights", "info:lc/xmlns/premis-v2")
+    xmlwr.WriteStartElement("rights", PremisContainer.PremisNamespace)
     xmlwr.WriteAttributeString("version", "2.1")
     If Not String.IsNullOrWhiteSpace(XmlId) Then
       xmlwr.WriteAttributeString("xmlID", XmlId)

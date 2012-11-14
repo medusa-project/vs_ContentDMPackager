@@ -4,9 +4,12 @@ Imports System.Text
 
 Public MustInherit Class PremisEntity
 
+  Public Property XmlId As String
+
   Public MustOverride Sub GetXML(xmlwr As XmlWriter, pCont As PremisContainer)
 
   Public MustOverride Function GetDefaultFileName(prefix As String, ext As String) As String
+
 
   ''' <summary>
   ''' Return just the index suffix part of a local identifier, i.e. for the identifier "MEDUSA:XX-XXX-XX-XXX=X.00005" this function

@@ -17,6 +17,39 @@ Public Class PremisRightsStatement
 
   Public Property LinkedObjects As Dictionary(Of PremisObject, List(Of String))
 
+  Public Sub New(elem As XmlElement)
+    LinkedAgents = New Dictionary(Of PremisAgent, List(Of String))
+    LinkedObjects = New Dictionary(Of PremisObject, List(Of String))
+    RightsGranted = New List(Of PremisRightsGranted)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:rightsStatementIdentifier", xmlns)
+    For Each nd As XmlElement In nds
+      RightsStatementIdentifier = New PremisIdentifier(nd.Item("rightsStatementIdentifierType", PremisContainer.PremisNamespace).InnerText, nd.Item("rightsStatementIdentifierValue", PremisContainer.PremisNamespace).InnerText)
+    Next
+
+    nds = elem.SelectNodes("premis:rightsBasis", xmlns)
+    For Each nd As XmlElement In nds
+      RightsBasis = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:copyrightInformation", xmlns)
+    For Each nd As XmlElement In nds
+      CopyrightInformation = New PremisCopyrightInformation(nd)
+    Next
+
+    nds = elem.SelectNodes("premis:rightsGranted", xmlns)
+    For Each nd As XmlElement In nds
+      RightsGranted.Add(New PremisRightsGranted(nd))
+    Next
+
+
+  End Sub
+
   Public Sub LinkToAgent(ByVal agt As PremisAgent)
     LinkedAgents.Add(agt, New List(Of String))
     'Reverse Link

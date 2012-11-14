@@ -4,7 +4,11 @@ Imports System.Text
 Imports System.Xml.Schema
 Imports System.Xml.XPath
 
+'TODO: Use the System.Xml.Serialization to do this
+
 Public Class PremisContainer
+
+  Public Const PremisNamespace As String = "info:lc/xmlns/premis-v2"
 
   Private Shared _schemas As XmlSchemaSet
 
@@ -73,17 +77,251 @@ Public Class PremisContainer
   End Sub
 
   Public Sub New(ByVal obj As PremisObject)
-    Objects = New List(Of PremisObject)
-    Agents = New List(Of PremisAgent)
-    Events = New List(Of PremisEvent)
-    Rights = New List(Of PremisRights)
+    Me.New()
 
     Objects.Add(obj)
 
   End Sub
 
+  Public Sub New(filename As String)
+    'TODO: This needs some serious testing
+    Me.New()
+
+    Dim xml As New XmlDocument()
+    xml.Load(filename)
+    Dim xmlns As New XmlNamespaceManager(xml.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = xml.SelectNodes("/premis:premis/premis:object", xmlns)
+    For Each nd As XmlElement In nds
+      Objects.Add(New PremisObject(nd))
+    Next
+
+    nds = xml.SelectNodes("/premis:premis/premis:event", xmlns)
+    For Each nd As XmlElement In nds
+      Events.Add(New PremisEvent(nd))
+    Next
+
+    nds = xml.SelectNodes("/premis:premis/premis:agent", xmlns)
+    For Each nd As XmlElement In nds
+      Agents.Add(New PremisAgent(nd))
+    Next
+
+    nds = xml.SelectNodes("/premis:premis/premis:rights", xmlns)
+    For Each nd As XmlElement In nds
+      Rights.Add(New PremisRights(nd))
+    Next
+
+    ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    'After instantiating all the entities create the relationships between them
+    'NOTE: If a linked to entioty does not exist in this xml then create a stub entity for purposes of filling out this model
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    For Each obj As PremisObject In Objects
+      Dim nd As XmlElement = xml.SelectSingleNode(String.Format("/premis:premis/premis:object[premis:objectIdentifier/premis:objectIdentifierType='LOCAL' and premis:objectIdentifier/premis:objectIdentifierValue='{0}']", obj.LocalIdentifierValue), xmlns)
+
+      Dim relatNds As XmlNodeList = nd.SelectNodes("premis:relationship", xmlns)
+      For Each relatNd As XmlElement In relatNds
+        Dim typ = relatNd.Item("relationshipType", PremisContainer.PremisNamespace)
+        Dim styp = relatNd.Item("relationshipSubType", PremisContainer.PremisNamespace)
+
+        Dim relat As New PremisRelationship(typ.InnerText, styp.InnerText)
+
+        For Each relatObjId As XmlElement In relatNd.SelectNodes("premis:relatedObjectIdentification", xmlns)
+          Dim idtyp = relatObjId.Item("relatedObjectIdentifierType", PremisContainer.PremisNamespace)
+          Dim idval = relatObjId.Item("relatedObjectIdentifierValue", PremisContainer.PremisNamespace)
+
+          Dim obj2 = Me.FindSingleObject(idtyp.InnerText, idval.InnerText)
+
+          If obj2 IsNot Nothing Then
+            relat.RelatedObjects.Add(obj2)
+          Else
+            relat.RelatedObjects.Add(New PremisObject(idtyp.InnerText, idval.InnerText, PremisObjectCategory.ObjectStub))
+          End If
+
+        Next
+
+        For Each relatEvtId As XmlElement In relatNd.SelectNodes("premis:relatedEventIdentification", xmlns)
+          Dim idtyp = relatEvtId.Item("relatedEventIdentifierType", PremisContainer.PremisNamespace)
+          Dim idval = relatEvtId.Item("relatedEventIdentifierValue", PremisContainer.PremisNamespace)
+
+          Dim evt2 = Me.FindSingleEvent(idtyp.InnerText, idval.InnerText)
+
+          If evt2 IsNot Nothing Then
+            relat.RelatedEvents.Add(evt2)
+          Else
+            relat.RelatedEvents.Add(New PremisEvent(idtyp.InnerText, idval.InnerText, "STUB"))
+          End If
+
+        Next
+
+        obj.Relationships.Add(relat)
+      Next
+
+      Dim lnkEvtNds As XmlNodeList = nd.SelectNodes("premis:linkingEventIdentifier", xmlns)
+      For Each evtNd As XmlElement In lnkEvtNds
+        Dim idtyp = evtNd.Item("linkingEventIdentifierType", PremisContainer.PremisNamespace)
+        Dim idval = evtNd.Item("linkingEventIdentifierValue", PremisContainer.PremisNamespace)
+
+        Dim evt2 = Me.FindSingleEvent(idtyp.InnerText, idval.InnerText)
+
+        If evt2 IsNot Nothing Then
+          obj.LinkedEvents.Add(evt2)
+        Else
+          obj.LinkedEvents.Add(New PremisEvent(idtyp.InnerText, idval.InnerText, "STUB"))
+        End If
+
+      Next
+
+      Dim lnkRtNds As XmlNodeList = nd.SelectNodes("premis:linkingRightsStatementIdentifier", xmlns)
+      For Each rtNd As XmlElement In lnkRtNds
+        Dim idtyp = rtNd.Item("linkingRightsStatementIdentifierType", PremisContainer.PremisNamespace)
+        Dim idval = rtNd.Item("linkingRightsStatementIdentifierValue", PremisContainer.PremisNamespace)
+
+        Dim rts2 = Me.FindSingleRightsStatement(idtyp.InnerText, idval.InnerText)
+
+        If rts2 IsNot Nothing Then
+          obj.LinkedRightsStatements.Add(rts2)
+        Else
+          obj.LinkedRightsStatements.Add(New PremisRightsStatement(idtyp.InnerText, idval.InnerText, "STUB"))
+        End If
+
+      Next
+
+    Next
+
+    For Each evt As PremisEvent In Events
+      Dim nd As XmlElement = xml.SelectSingleNode(String.Format("/premis:premis/premis:event[premis:eventIdentifier/premis:eventIdentifierType='{0}' and premis:eventIdentifier/premis:eventIdentifierValue='{1}']", evt.EventIdentifier.IdentifierType, evt.EventIdentifier.IdentifierValue), xmlns)
+
+      Dim lnkAgtNds As XmlNodeList = nd.SelectNodes("premis:linkingAgentIdentifier", xmlns)
+      For Each agtNd As XmlElement In lnkAgtNds
+        Dim idtyp = agtNd.Item("linkingAgentIdentifierType", PremisContainer.PremisNamespace)
+        Dim idval = agtNd.Item("linkingAgentIdentifierValue", PremisContainer.PremisNamespace)
+        Dim roles = agtNd.SelectNodes("premis:linkingAgentRole", xmlns)
+        Dim roleLst As New List(Of String)
+        For Each role As XmlElement In roles
+          roleLst.Add(role.InnerText)
+        Next
+
+        Dim agt2 = Me.FindSingleAgent(idtyp.InnerText, idval.InnerText)
+
+        If agt2 IsNot Nothing Then
+          evt.LinkedAgents.Add(agt2, roleLst)
+        Else
+          evt.LinkedAgents.Add(New PremisAgent(idtyp.InnerText, idval.InnerText), roleLst)
+        End If
+
+      Next
+
+      Dim lnkObjNds As XmlNodeList = nd.SelectNodes("premis:linkingObjectIdentifier", xmlns)
+      For Each objNd As XmlElement In lnkObjNds
+        Dim idtyp = objNd.Item("linkingObjectIdentifierType", PremisContainer.PremisNamespace)
+        Dim idval = objNd.Item("linkingObjectIdentifierValue", PremisContainer.PremisNamespace)
+        Dim roles = objNd.SelectNodes("premis:linkingObjectRole", xmlns)
+        Dim roleLst As New List(Of String)
+        For Each role As XmlElement In roles
+          roleLst.Add(role.InnerText)
+        Next
+
+        Dim obj2 = Me.FindSingleObject(idtyp.InnerText, idval.InnerText)
+
+        If obj2 IsNot Nothing Then
+          evt.LinkedObjects.Add(obj2, roleLst)
+        Else
+          evt.LinkedObjects.Add(New PremisObject(idtyp.InnerText, idval.InnerText, PremisObjectCategory.ObjectStub), roleLst)
+        End If
+
+      Next
+
+    Next
+
+    For Each agt As PremisAgent In Agents
+      Dim nd As XmlElement = xml.SelectSingleNode(String.Format("/premis:premis/premis:agent[premis:agentIdentifier/premis:agentIdentifierType='{0}' and premis:agentIdentifier/premis:agentIdentifierValue='{1}']", "LOCAL", agt.LocalIdentifierValue), xmlns)
+
+      Dim lnkEvtNds As XmlNodeList = nd.SelectNodes("premis:linkingEventIdentifier", xmlns)
+      For Each evtNd As XmlElement In lnkEvtNds
+        Dim idtyp = evtNd.Item("linkingEventIdentifierType", PremisContainer.PremisNamespace)
+        Dim idval = evtNd.Item("linkingEventIdentifierValue", PremisContainer.PremisNamespace)
+
+        Dim evt2 = Me.FindSingleEvent(idtyp.InnerText, idval.InnerText)
+
+        If evt2 IsNot Nothing Then
+          agt.LinkedEvents.Add(evt2)
+        Else
+          agt.LinkedEvents.Add(New PremisEvent(idtyp.InnerText, idval.InnerText, "STUB"))
+        End If
+
+      Next
+
+      Dim lnkRtNds As XmlNodeList = nd.SelectNodes("premis:linkingRightsStatementIdentifier", xmlns)
+      For Each rtNd As XmlElement In lnkRtNds
+        Dim idtyp = rtNd.Item("linkingRightsStatementIdentifierType", PremisContainer.PremisNamespace)
+        Dim idval = rtNd.Item("linkingRightsStatementIdentifierValue", PremisContainer.PremisNamespace)
+
+        Dim rt2 = Me.FindSingleRightsStatement(idtyp.InnerText, idval.InnerText)
+
+        If rt2 IsNot Nothing Then
+          agt.LinkedRightsStatements.Add(rt2)
+        Else
+          agt.LinkedRightsStatements.Add(New PremisRightsStatement(idtyp.InnerText, idval.InnerText, "STUB"))
+        End If
+
+      Next
+
+    Next
+
+    For Each rt As PremisRights In Rights
+      For Each rts As PremisRightsStatement In rt.RightsStatements
+
+        Dim nd As XmlElement = xml.SelectSingleNode(String.Format("/premis:premis/premis:rights/premis:rightsStatement[premis:rightsStatementIdentifier/premis:rightsStatementIdentifierType='{0}' and premis:rightsStatementIdentifier/premis:rightsStatementIdentifierValue='{1}']", rts.RightsStatementIdentifier.IdentifierType, rts.RightsStatementIdentifier.IdentifierValue), xmlns)
+
+        Dim lnkAgtNds As XmlNodeList = nd.SelectNodes("premis:linkingAgentIdentifier", xmlns)
+        For Each agtNd As XmlElement In lnkAgtNds
+          Dim idtyp = agtNd.Item("linkingAgentIdentifierType", PremisContainer.PremisNamespace)
+          Dim idval = agtNd.Item("linkingAgentIdentifierValue", PremisContainer.PremisNamespace)
+          Dim roles = agtNd.SelectNodes("premis:linkingAgentRole", xmlns)
+          Dim roleLst As New List(Of String)
+          For Each role As XmlElement In roles
+            roleLst.Add(role.InnerText)
+          Next
+
+          Dim agt2 = Me.FindSingleAgent(idtyp.InnerText, idval.InnerText)
+
+          If agt2 IsNot Nothing Then
+            rts.LinkedAgents.Add(agt2, roleLst)
+          Else
+            rts.LinkedAgents.Add(New PremisAgent(idtyp.InnerText, idval.InnerText), roleLst)
+          End If
+
+        Next
+
+        Dim lnkObjNds As XmlNodeList = nd.SelectNodes("premis:linkingObjectIdentifier", xmlns)
+        For Each objNd As XmlElement In lnkObjNds
+          Dim idtyp = objNd.Item("linkingObjectIdentifierType", PremisContainer.PremisNamespace)
+          Dim idval = objNd.Item("linkingObjectIdentifierValue", PremisContainer.PremisNamespace)
+          Dim roles = objNd.SelectNodes("premis:linkingObjectRole", xmlns)
+          Dim roleLst As New List(Of String)
+          For Each role As XmlElement In roles
+            roleLst.Add(role.InnerText)
+          Next
+
+          Dim obj2 = Me.FindSingleObject(idtyp.InnerText, idval.InnerText)
+
+          If obj2 IsNot Nothing Then
+            rts.LinkedObjects.Add(obj2, roleLst)
+          Else
+            rts.LinkedObjects.Add(New PremisObject(idtyp.InnerText, idval.InnerText, PremisObjectCategory.ObjectStub), roleLst)
+          End If
+
+        Next
+
+      Next
+    Next
+  End Sub
+
   Public Sub GetXMLRoot(xmlwr As XmlWriter)
-    xmlwr.WriteStartElement("premis", "info:lc/xmlns/premis-v2")
+    xmlwr.WriteStartElement("premis", PremisContainer.PremisNamespace)
     xmlwr.WriteAttributeString("xsi", "schemaLocation", "http://www.w3.org/2001/XMLSchema-instance", "info:lc/xmlns/premis-v2 http://www.loc.gov/standards/premis/v2/premis-v2-1.xsd")
     xmlwr.WriteAttributeString("version", "2.1")
     xmlwr.WriteAttributeString("xmlns", "xlink", Nothing, "http://www.w3.org/1999/xlink")
@@ -128,7 +366,7 @@ Public Class PremisContainer
 
     If _schemas Is Nothing Then
       _schemas = New XmlSchemaSet
-      _schemas.Add("info:lc/xmlns/premis-v2", "http://www.loc.gov/standards/premis/v2/premis-v2-1.xsd")
+      _schemas.Add(PremisContainer.PremisNamespace, "http://www.loc.gov/standards/premis/v2/premis-v2-1.xsd")
     End If
 
     Dim document As XmlDocument = New XmlDocument()

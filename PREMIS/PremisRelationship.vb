@@ -13,8 +13,18 @@ Public Class PremisRelationship
 
   Public Property RelatedEvents As List(Of PremisEvent)
 
+
   Protected Sub New()
     'no empty constuctors allowed
+  End Sub
+
+  Public Sub New(ByVal type As String, ByVal subType As String)
+    RelationshipType = type
+    RelationshipSubType = subType
+
+    RelatedObjects = New List(Of PremisObject)
+
+    RelatedEvents = New List(Of PremisEvent)
   End Sub
 
   Public Sub New(ByVal type As String, ByVal subType As String, ByVal obj As PremisObject)

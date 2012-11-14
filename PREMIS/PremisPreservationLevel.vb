@@ -6,6 +6,36 @@ Public Class PremisPreservationLevel
   Public Property PreservationLevelRationale As List(Of String)
   Public Property PreservationLevelDateAssigned As Date?
 
+  Public Sub New(elem As XmlElement)
+    PreservationLevelRationale = New List(Of String)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:preservationLevelValue", xmlns)
+    For Each nd As XmlElement In nds
+      PreservationLevelValue = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:preservationLevelRole", xmlns)
+    For Each nd As XmlElement In nds
+      PreservationLevelRole = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:preservationLevelRationale", xmlns)
+    For Each nd As XmlElement In nds
+      PreservationLevelRationale.Add(nd.InnerText)
+    Next
+
+    nds = elem.SelectNodes("premis:preservationLevelDateAssigned", xmlns)
+    For Each nd As XmlElement In nds
+      PreservationLevelDateAssigned = Date.Parse(nd.InnerText)
+    Next
+
+  End Sub
+
   Protected Sub New()
     'no empty constuctors allowed
   End Sub

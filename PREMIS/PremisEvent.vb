@@ -21,7 +21,43 @@ Public Class PremisEvent
 
   Public Property LinkedObjects As Dictionary(Of PremisObject, List(Of String))
 
-  Public Property XmlId As String
+  Public Sub New(elem As XmlElement)
+    EventOutcomeInformation = New List(Of PremisEventOutcomeInformation)
+    LinkedAgents = New Dictionary(Of PremisAgent, List(Of String))
+    LinkedObjects = New Dictionary(Of PremisObject, List(Of String))
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:eventIdentifier", xmlns)
+    For Each nd As XmlElement In nds
+      EventIdentifier = New PremisIdentifier(nd.Item("eventIdentifierType", PremisContainer.PremisNamespace).InnerText, nd.Item("eventIdentifierValue", PremisContainer.PremisNamespace).InnerText)
+    Next
+
+    nds = elem.SelectNodes("premis:eventType", xmlns)
+    For Each nd As XmlElement In nds
+      EventType = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:eventDateTime", xmlns)
+    For Each nd As XmlElement In nds
+      EventDateTime = DateTime.Parse(nd.InnerText)
+    Next
+
+    nds = elem.SelectNodes("premis:eventDetail", xmlns)
+    For Each nd As XmlElement In nds
+      EventDetail = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:eventOutcomeInformation", xmlns)
+    For Each nd As XmlElement In nds
+      EventOutcomeInformation.Add(New PremisEventOutcomeInformation(nd))
+    Next
+
+    XmlId = elem.GetAttribute("xmlID")
+  End Sub
 
   Protected Sub New()
     'no empty constuctors allowed
@@ -68,7 +104,7 @@ Public Class PremisEvent
   End Sub
 
   Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pcont As PremisContainer)
-    xmlwr.WriteStartElement("event", "info:lc/xmlns/premis-v2")
+    xmlwr.WriteStartElement("event", PremisContainer.PremisNamespace)
     xmlwr.WriteAttributeString("version", "2.1")
     If Not String.IsNullOrWhiteSpace(XmlId) Then
       xmlwr.WriteAttributeString("xmlID", XmlId)

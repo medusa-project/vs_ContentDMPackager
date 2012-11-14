@@ -7,6 +7,31 @@ Public Class PremisSignificantProperties
 
   Public Property SignificantPropertiesExtensions As List(Of XmlDocument)
 
+  Public Sub New(elem As XmlElement)
+    SignificantPropertiesExtensions = New List(Of XmlDocument)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:significantPropertiesType", xmlns)
+    For Each nd As XmlElement In nds
+      SignificantPropertiesType = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:significantPropertiesValue", xmlns)
+    For Each nd As XmlElement In nds
+      SignificantPropertiesValue = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:significantPropertiesExtension", xmlns)
+    For Each nd As XmlElement In nds
+      SignificantPropertiesExtensions.Add(nd.Clone)
+    Next
+
+  End Sub
+
   Public Sub New()
     SignificantPropertiesExtensions = New List(Of XmlDocument)
   End Sub

@@ -26,7 +26,55 @@ Public Class PremisObject
 
   Public Property SignificantProperties As List(Of PremisSignificantProperties)
 
-  Public Property XmlId As String
+  Public Sub New(elem As XmlElement)
+    ObjectIdentifiers = New List(Of PremisIdentifier)
+    PreservationLevels = New List(Of PremisPreservationLevel)
+    ObjectCharacteristics = New List(Of PremisObjectCharacteristics)
+    LinkedEvents = New List(Of PremisEvent)
+    LinkedRightsStatements = New List(Of PremisRightsStatement)
+    LinkedIntellectualEntityIdentifiers = New List(Of PremisIdentifier)
+    Relationships = New List(Of PremisRelationship)
+    SignificantProperties = New List(Of PremisSignificantProperties)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:objectIdentifier", xmlns)
+    For Each nd As XmlElement In nds
+      ObjectIdentifiers.Add(New PremisIdentifier(nd.Item("objectIdentifierType", PremisContainer.PremisNamespace).InnerText, nd.Item("objectIdentifierValue", PremisContainer.PremisNamespace).InnerText))
+    Next
+
+    nds = elem.SelectNodes("premis:preservationLevel", xmlns)
+    For Each nd As XmlElement In nds
+      PreservationLevels.Add(New PremisPreservationLevel(nd))
+    Next
+
+    Dim cat As String = elem.GetAttribute("type", "http://www.w3.org/2001/XMLSchema-instance")
+    ObjectCategory = [Enum].Parse(GetType(PremisObjectCategory), cat, True)
+
+    nds = elem.SelectNodes("premis:objectCharacteristics", xmlns)
+    For Each nd As XmlElement In nds
+      ObjectCharacteristics.Add(New PremisObjectCharacteristics(nd))
+    Next
+
+    nds = elem.SelectNodes("premis:originalName", xmlns)
+    For Each nd As XmlElement In nds
+      OriginalName = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:linkingIntellectualEntityIdentifier", xmlns)
+    For Each nd As XmlElement In nds
+      LinkedIntellectualEntityIdentifiers.Add(New PremisIdentifier(nd.Item("linkingIntellectualEntityIdentifierType", PremisContainer.PremisNamespace).InnerText, nd.Item("linkingIntellectualEntityIdentifierValue", PremisContainer.PremisNamespace).InnerText))
+    Next
+
+    nds = elem.SelectNodes("premis:significantProperties", xmlns)
+    For Each nd As XmlElement In nds
+      SignificantProperties.Add(New PremisSignificantProperties(nd))
+    Next
+
+  End Sub
 
   Public Sub LinkToEvent(ByVal evt As PremisEvent)
     LinkedEvents.Add(evt)
@@ -84,7 +132,6 @@ Public Class PremisObject
 
   End Sub
 
-
   Protected Sub New()
     'no empty constuctors allowed
   End Sub
@@ -113,7 +160,7 @@ Public Class PremisObject
   End Sub
 
   Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer)
-    xmlwr.WriteStartElement("object", "info:lc/xmlns/premis-v2")
+    xmlwr.WriteStartElement("object", PremisContainer.PremisNamespace)
     xmlwr.WriteAttributeString("xsi", "type", "http://www.w3.org/2001/XMLSchema-instance", [Enum].GetName(GetType(PremisObjectCategory), ObjectCategory).ToLower)
     xmlwr.WriteAttributeString("version", "2.1")
     If Not String.IsNullOrWhiteSpace(XmlId) Then
@@ -222,5 +269,6 @@ Public Enum PremisObjectCategory
   Representation = 0
   File = 1
   Bitstream = 2
+  ObjectStub = 3 'objects with nothing but an identifier, used as placeholders in relationships
 End Enum
 

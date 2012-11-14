@@ -12,6 +12,35 @@ Public Class PremisCopyrightInformation
 
   Public Property CopyrightNotes As List(Of String)
 
+  Public Sub New(elem As XmlElement)
+    CopyrightNotes = New List(Of String)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:copyrightStatus", xmlns)
+    For Each nd As XmlElement In nds
+      CopyrightStatus = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:copyrightJurisdiction", xmlns)
+    For Each nd As XmlElement In nds
+      CopyrightJurisdiction = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:copyrightStatusDeterminationDate", xmlns)
+    For Each nd As XmlElement In nds
+      CopyrightStatusDeterminationDate = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:copyrightNote", xmlns)
+    For Each nd As XmlElement In nds
+      CopyrightNotes.Add(nd.InnerText)
+    Next
+  End Sub
+
   Protected Sub New()
     'no empty constuctors allowed
   End Sub

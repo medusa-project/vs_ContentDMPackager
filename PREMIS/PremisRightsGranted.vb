@@ -14,6 +14,43 @@ Public Class PremisRightsGranted
 
   Public Property RightsGrantedNotes As List(Of String)
 
+  Public Sub New(elem As XmlElement)
+    Restrictions = New List(Of String)
+    RightsGrantedNotes = New List(Of String)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:act", xmlns)
+    For Each nd As XmlElement In nds
+      Act = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:restriction", xmlns)
+    For Each nd As XmlElement In nds
+      Restrictions.Add(nd.InnerText)
+    Next
+
+    nds = elem.SelectNodes("premis:termOfGrant/premis:startDate", xmlns)
+    For Each nd As XmlElement In nds
+      TermOfGrantStartDate = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:termOfGrant/premis:endDate", xmlns)
+    For Each nd As XmlElement In nds
+      TermOfGrantEndDate = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:rightsGrantedNote", xmlns)
+    For Each nd As XmlElement In nds
+      RightsGrantedNotes.Add(nd.InnerText)
+    Next
+
+  End Sub
+
+
   Protected Sub New()
     'no empty constuctors allowed
   End Sub

@@ -18,7 +18,47 @@ Public Class PremisAgent
 
   Public Property LinkedRightsStatements As List(Of PremisRightsStatement)
 
-  Public Property XmlId As String
+  Public Sub New(elem As XmlElement)
+    AgentIdentifiers = New List(Of PremisIdentifier)
+    AgentNames = New List(Of String)
+    AgentNotes = New List(Of String)
+    LinkedEvents = New List(Of PremisEvent)
+    LinkedRightsStatements = New List(Of PremisRightsStatement)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:agentIdentifier", xmlns)
+    For Each nd As XmlElement In nds
+      AgentIdentifiers.Add(New PremisIdentifier(nd.Item("agentIdentifierType", PremisContainer.PremisNamespace).InnerText, nd.Item("agentIdentifierValue", PremisContainer.PremisNamespace).InnerText))
+    Next
+
+    nds = elem.SelectNodes("premis:agentName", xmlns)
+    For Each nd As XmlElement In nds
+      AgentNames.Add(nd.InnerText)
+    Next
+
+    nds = elem.SelectNodes("premis:agentType", xmlns)
+    For Each nd As XmlElement In nds
+      AgentType = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:agentNote", xmlns)
+    For Each nd As XmlElement In nds
+      AgentNotes.Add(nd.InnerText)
+    Next
+
+    XmlId = elem.GetAttribute("xmlID")
+
+  End Sub
+
+  Public ReadOnly Property LocalIdentifierValue As String
+    Get
+      Return AgentIdentifiers.Where(Function(id) id.IdentifierType = "LOCAL").FirstOrDefault.IdentifierValue
+    End Get
+  End Property
 
   Public Shared Function GetCurrentSoftwareAgent(idtype As String, idvalue As String) As PremisAgent
 
@@ -71,7 +111,7 @@ Public Class PremisAgent
   End Sub
 
   Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer)
-    xmlwr.WriteStartElement("agent", "info:lc/xmlns/premis-v2")
+    xmlwr.WriteStartElement("agent", PremisContainer.PremisNamespace)
     xmlwr.WriteAttributeString("version", "2.1")
     If Not String.IsNullOrWhiteSpace(XmlId) Then
       xmlwr.WriteAttributeString("xmlID", XmlId)

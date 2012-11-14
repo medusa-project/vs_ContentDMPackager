@@ -10,24 +10,54 @@ Public Class PremisCreatingApplication
 
   Public Property DateCreatedByApplication As String
 
-  Public Property CreatingApplicationExtensions As List(Of XmlElement)
+  Public Property CreatingApplicationExtensions As List(Of XmlDocument)
+
+  Public Sub New(elem As XmlElement)
+    CreatingApplicationExtensions = New List(Of XmlDocument)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:creatingApplicationName", xmlns)
+    For Each nd As XmlElement In nds
+      CreatingApplicationName = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:creatingApplicationVersion", xmlns)
+    For Each nd As XmlElement In nds
+      CreatingApplicationVersion = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:dateCreatedByApplication", xmlns)
+    For Each nd As XmlElement In nds
+      DateCreatedByApplication = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:creatingApplicationExtension", xmlns)
+    For Each nd As XmlElement In nds
+      CreatingApplicationExtensions.Add(nd.Clone)
+    Next
+
+  End Sub
 
   Public Sub New(ByVal application As String)
     CreatingApplicationName = application
-    CreatingApplicationExtensions = New List(Of XmlElement)
+    CreatingApplicationExtensions = New List(Of XmlDocument)
   End Sub
 
   Public Sub New(ByVal application As String, ByVal version As String)
     CreatingApplicationName = application
     CreatingApplicationVersion = version
-    CreatingApplicationExtensions = New List(Of XmlElement)
+    CreatingApplicationExtensions = New List(Of XmlDocument)
   End Sub
 
   Public Sub New(ByVal application As String, ByVal version As String, ByVal dt As Date)
     CreatingApplicationName = application
     CreatingApplicationVersion = version
     DateCreatedByApplication = dt.ToString("s")
-    CreatingApplicationExtensions = New List(Of XmlElement)
+    CreatingApplicationExtensions = New List(Of XmlDocument)
   End Sub
 
   Public Sub GetXML(ByVal xmlwr As XmlWriter)
@@ -57,7 +87,7 @@ Public Class PremisCreatingApplication
         xmlwr.WriteElementString("dateCreatedByApplication", DateCreatedByApplication)
       End If
     End If
-    For Each nd As XmlElement In CreatingApplicationExtensions
+    For Each nd As XmlDocument In CreatingApplicationExtensions
       xmlwr.WriteStartElement("creatingApplicationExtension")
       xmlwr.WriteNode(nd.CreateNavigator(), False)
       xmlwr.WriteEndElement()

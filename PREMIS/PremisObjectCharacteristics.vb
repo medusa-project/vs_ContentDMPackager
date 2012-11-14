@@ -19,6 +19,46 @@ Public Class PremisObjectCharacteristics
 
   Public Property ObjectCharacteristicsExtensions As List(Of XmlDocument)
 
+  Public Sub New(elem As XmlElement)
+    Me.new()
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:compositionLevel", xmlns)
+    For Each nd As XmlElement In nds
+      CompositionLevel = Integer.Parse(nd.InnerText)
+    Next
+
+    nds = elem.SelectNodes("premis:fixity", xmlns)
+    For Each nd As XmlElement In nds
+      Fixities.Add(New PremisFixity(nd))
+    Next
+
+    nds = elem.SelectNodes("premis:size", xmlns)
+    For Each nd As XmlElement In nds
+      Size = Long.Parse(nd.InnerText)
+    Next
+
+    nds = elem.SelectNodes("premis:format", xmlns)
+    For Each nd As XmlElement In nds
+      Formats.Add(New PremisFormat(nd))
+    Next
+
+    nds = elem.SelectNodes("premis:creatingApplication", xmlns)
+    For Each nd As XmlElement In nds
+      CreatingApplications.Add(New PremisCreatingApplication(nd))
+    Next
+
+    nds = elem.SelectNodes("premis:objectCharacteristicsExtension", xmlns)
+    For Each nd As XmlElement In nds
+      ObjectCharacteristicsExtensions.Add(nd.Clone)
+    Next
+
+  End Sub
+
   Public Sub New()
     Fixities = New List(Of PremisFixity)
     Formats = New List(Of PremisFormat)

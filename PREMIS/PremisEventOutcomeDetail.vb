@@ -9,6 +9,25 @@ Public Class PremisEventOutcomeDetail
 
   Public Property EventOutcomeDetailExtensions As List(Of XmlDocument)
 
+  Public Sub New(elem As XmlElement)
+    EventOutcomeDetailExtensions = New List(Of XmlDocument)
+
+    Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
+    xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
+
+    Dim nds As XmlNodeList
+
+    nds = elem.SelectNodes("premis:eventOutcomeDetailNote", xmlns)
+    For Each nd As XmlElement In nds
+      EventOutcomeDetailNote = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:eventOutcomeDetailExtension", xmlns)
+    For Each nd As XmlElement In nds
+      EventOutcomeDetailExtensions.Add(nd.Clone)
+    Next
+
+  End Sub
   Sub New()
     EventOutcomeDetailExtensions = New List(Of XmlDocument)
   End Sub
