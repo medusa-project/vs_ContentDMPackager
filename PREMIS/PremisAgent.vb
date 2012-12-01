@@ -136,13 +136,22 @@ Public Class PremisAgent
       xmlwr.WriteElementString("agentNote", nt)
     Next
 
-    'only include events that are included in the parent container
-    For Each lnkEvt As PremisEvent In LinkedEvents.Where(Function(e) pCont.Events.Contains(e))
-      xmlwr.WriteStartElement("linkingEventIdentifier")
-      xmlwr.WriteElementString("linkingEventIdentifierType", lnkEvt.EventIdentifier.IdentifierType)
-      xmlwr.WriteElementString("linkingEventIdentifierValue", lnkEvt.EventIdentifier.IdentifierValue)
-      xmlwr.WriteEndElement()
-    Next
+    If pCont IsNot Nothing Then
+      'only include events that are included in the parent container
+      For Each lnkEvt As PremisEvent In LinkedEvents.Where(Function(e) pCont.Events.Contains(e))
+        xmlwr.WriteStartElement("linkingEventIdentifier")
+        xmlwr.WriteElementString("linkingEventIdentifierType", lnkEvt.EventIdentifier.IdentifierType)
+        xmlwr.WriteElementString("linkingEventIdentifierValue", lnkEvt.EventIdentifier.IdentifierValue)
+        xmlwr.WriteEndElement()
+      Next
+    Else
+      For Each lnkEvt As PremisEvent In LinkedEvents
+        xmlwr.WriteStartElement("linkingEventIdentifier")
+        xmlwr.WriteElementString("linkingEventIdentifierType", lnkEvt.EventIdentifier.IdentifierType)
+        xmlwr.WriteElementString("linkingEventIdentifierValue", lnkEvt.EventIdentifier.IdentifierValue)
+        xmlwr.WriteEndElement()
+      Next
+    End If
 
     For Each lnkRStrm As PremisRightsStatement In LinkedRightsStatements
       xmlwr.WriteStartElement("linkingRightsStatementIdentifier")

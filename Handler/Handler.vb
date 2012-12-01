@@ -67,7 +67,7 @@ Module Handler
   Private Sub ProcessDelete()
     For Each k In HandleMap.Keys
       Dim local_id As String = MetadataFunctions.GetLocalIdentifier(k)
-      Dim hc As HandleClient = HandleClient.DeleteHandle(local_id)
+      Dim hc As HandleClient.HandleClient = HandleClient.HandleClient.DeleteHandle(local_id)
       DoOutput(hc)
     Next
 
@@ -76,13 +76,13 @@ Module Handler
   Private Sub ProcessUpdate()
     For Each k In HandleMap.Keys
       Dim local_id As String = MetadataFunctions.GetLocalIdentifier(k)
-      Dim hc As HandleClient = HandleClient.CreateUpdateHandle(local_id, HandleMap.Item(k).ToString, Nothing, Nothing)
+      Dim hc As HandleClient.HandleClient = HandleClient.HandleClient.CreateUpdateHandle(local_id, HandleMap.Item(k).ToString, Nothing, Nothing)
       DoOutput(hc)
     Next
 
   End Sub
 
-  Private Sub DoOutput(hc As HandleClient)
+  Private Sub DoOutput(hc As HandleClient.HandleClient)
     If String.IsNullOrWhiteSpace(hc.error_message) Then
       If String.IsNullOrWhiteSpace(hc.updated_fields) Then
         Console.Out.WriteLine(hc.last_action & " " & hc.status & " " & hc.handle_value & " No Change")

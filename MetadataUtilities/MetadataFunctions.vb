@@ -40,7 +40,7 @@ Public Class MetadataFunctions
   ''' <returns>Handle</returns>
   ''' <remarks>HandlePrefix is optional.  A check digit is added to the end of the GUID using the Verhoeff algorithm</remarks>
   Public Shared Function GenerateLocalIdentifier() As String
-    Dim project As String = ConfigurationManager.AppSettings.Item("Handle.Project")
+    Dim project As String = MedusaAppSettings.Settings.HandleProject
     Dim uuid As Guid = Guid.NewGuid
 
 
@@ -91,9 +91,9 @@ Public Class MetadataFunctions
       Dim uuidPlusCheck As String = m.Groups.Item(3).Value
       Dim localId As String = m.Groups.Item(4).Value
 
-      If (Not String.IsNullOrWhiteSpace(prefix)) AndAlso prefix <> ConfigurationManager.AppSettings.Item("Handle.Prefix") Then
+      If (Not String.IsNullOrWhiteSpace(prefix)) AndAlso prefix <> MedusaAppSettings.Settings.HandlePrefix Then
         Return False
-      ElseIf project <> ConfigurationManager.AppSettings.Item("Handle.Project") Then
+      ElseIf project <> MedusaAppSettings.Settings.HandleProject Then
         Return False
       ElseIf CheckDigit.ValidateCheckCharacter(uuidPlusCheck.Replace("-", "")) = False Then
         Return False
@@ -126,14 +126,14 @@ Public Class MetadataFunctions
     End If
 
     Dim mimeout As String = ""
-    Dim MaxContent As Integer
+    Dim MaxContent As Long
     Dim fs As FileStream
     Dim buf() As Byte
     Dim result As String
 
     If Not System.IO.File.Exists(fileName) Then Throw New FileNotFoundException(fileName + " not found")
 
-    MaxContent = CInt(New FileInfo(fileName).Length)
+    MaxContent = (New FileInfo(fileName)).Length
     If MaxContent > 4096 Then MaxContent = 4096
 
     fs = New FileStream(fileName, FileMode.Open)
@@ -207,5 +207,13 @@ Public Class MetadataFunctions
     Else
       Return ""
     End If
+  End Function
+
+  Public Shared Function GetIdType(id As String) As String
+    Dim idType As String = "LOCAL"
+    If id.StartsWith(MedusaAppSettings.Settings.HandlePrefix & "/") Then
+      idType = "HANDLE"
+    End If
+    Return idType
   End Function
 End Class

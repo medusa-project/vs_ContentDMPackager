@@ -9,8 +9,8 @@
     </SchemaVersion>
     <ProjectGuid>{E13EFBD7-AAF9-46A4-A181-42303546C5DE}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <StartupObject>Handler.Handler</StartupObject>
-    <RootNamespace>Handler</RootNamespace>
+    <StartupObject>Uiuc.Library.Handler.Handler</StartupObject>
+    <RootNamespace>Uiuc.Library.Handler</RootNamespace>
     <AssemblyName>Handler</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>Console</MyType>

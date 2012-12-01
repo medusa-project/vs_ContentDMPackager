@@ -126,6 +126,10 @@
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MetadataUtilities\MetadataUtilities.vbproj">
+      <Project>{D03D3545-EB61-43DF-9736-8D0502F3BE9D}</Project>
+      <Name>MetadataUtilities</Name>
+    </ProjectReference>
     <ProjectReference Include="..\PREMIS\PREMIS.vbproj">
       <Project>{164A9D55-4F5B-4B32-8D4C-90F044936FCA}</Project>
       <Name>PREMIS</Name>

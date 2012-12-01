@@ -7,6 +7,7 @@ Imports System.Text
 Imports System.Collections.Specialized
 Imports System.Security
 Imports Uiuc.Library.Premis
+Imports Uiuc.Library.MetadataUtilities
 
 Public Class HandleClient
 
@@ -249,32 +250,31 @@ Public Class HandleClient
 
   Public Shared ReadOnly Property prefix As String
     Get
-      Return ConfigurationManager.AppSettings.Item("Handle.Prefix")
+      Return MedusaAppSettings.Settings.HandlePrefix
     End Get
   End Property
 
   Private Shared ReadOnly Property service_base_url As String
     Get
-      Return ConfigurationManager.AppSettings.Item("Handle.ServiceURL")
+      Return MedusaAppSettings.Settings.HandleServiceURL
     End Get
   End Property
 
   Private Shared ReadOnly Property resource_type As String
     Get
-      Return ConfigurationManager.AppSettings.Item("Handle.ResourceType")
+      Return MedusaAppSettings.Settings.HandleResourceType
     End Get
   End Property
 
   Private Shared ReadOnly Property password As String
     Get
-      Dim confSet As NameValueCollection = ConfigurationManager.GetSection("secretAppSettings")
-      Return confSet.Item("Handle.Password")
+      Return MedusaAppSettings.Settings.HandlePassword
     End Get
   End Property
 
   Public Shared ReadOnly Property resolver_base_url As String
     Get
-      Return ConfigurationManager.AppSettings.Item("Handle.ResolverBaseURL")
+      Return MedusaAppSettings.Settings.HandleResolverBaseURL
     End Get
   End Property
 

@@ -390,6 +390,11 @@ Public Class PremisContainer
 
   End Sub
 
+  ''' <summary>
+  ''' Save the Premis Container as a single XML file
+  ''' </summary>
+  ''' <param name="fileName"></param>
+  ''' <remarks></remarks>
   Public Sub SaveXML(ByVal fileName As String)
     Dim xmlStr As String = Me.GetXML
 
@@ -426,6 +431,12 @@ Public Class PremisContainer
 
   End Sub
 
+
+  ''' <summary>
+  ''' Save each Premis Entity as a separate XML file
+  ''' </summary>
+  ''' <param name="folder"></param>
+  ''' <remarks></remarks>
   Public Sub SaveEachXML(folder As String)
 
 
