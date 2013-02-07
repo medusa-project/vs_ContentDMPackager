@@ -1,9 +1,12 @@
 ﻿Imports System.Console
-Imports Uiuc.Library.HandleClient
-Imports Uiuc.Library.MetadataUtilities
+Imports Uiuc.Library.IdManagement
 Imports System.IO
 Imports System.Net
 
+''' <summary>
+''' A command line program for doing batch Handle operations against the UIUC Library's Handle Server
+''' </summary>
+''' <remarks></remarks>
 Module Handler
   Private HandleMap As New Dictionary(Of String, Uri)
 
@@ -66,7 +69,7 @@ Module Handler
 
   Private Sub ProcessDelete()
     For Each k In HandleMap.Keys
-      Dim local_id As String = MetadataFunctions.GetLocalIdentifier(k)
+      Dim local_id As String = IdManager.ParseLocalIdentifier(k)
       Dim hc As HandleClient.HandleClient = HandleClient.HandleClient.DeleteHandle(local_id)
       DoOutput(hc)
     Next
@@ -75,7 +78,7 @@ Module Handler
 
   Private Sub ProcessUpdate()
     For Each k In HandleMap.Keys
-      Dim local_id As String = MetadataFunctions.GetLocalIdentifier(k)
+      Dim local_id As String = IdManager.ParseLocalIdentifier(k)
       Dim hc As HandleClient.HandleClient = HandleClient.HandleClient.CreateUpdateHandle(local_id, HandleMap.Item(k).ToString, Nothing, Nothing)
       DoOutput(hc)
     Next

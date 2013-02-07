@@ -14,8 +14,9 @@
     <AssemblyName>Handler</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>Console</MyType>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -26,6 +27,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>Handler.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -36,6 +38,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DocumentationFile>Handler.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -113,13 +116,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\FolderPackager\IdManager\IdManagement.vbproj">
+      <Project>{d1078074-30bb-425b-bce1-e90ef6ae7dbe}</Project>
+      <Name>IdManagement</Name>
+    </ProjectReference>
     <ProjectReference Include="..\HandleClient\HandleClient.vbproj">
       <Project>{A8B9F624-4EEA-47BA-9D45-60933CCE623A}</Project>
       <Name>HandleClient</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MetadataUtilities\MetadataUtilities.vbproj">
-      <Project>{D03D3545-EB61-43DF-9736-8D0502F3BE9D}</Project>
-      <Name>MetadataUtilities</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
