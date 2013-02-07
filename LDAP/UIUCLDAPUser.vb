@@ -1,10 +1,9 @@
 ﻿Imports System.DirectoryServices
 Imports System.Runtime.InteropServices
-Imports Uiuc.Library.Premis
 Imports System.Security
 
 ''' <summary>
-''' This class uses the campus LDAP.  it provides access to LDAP attributes for a given user account keyed by netid.
+''' This class represents a user from the campus LDAP Electronic Directory.  It provides access to LDAP attributes for a given user account keyed by netid.
 ''' </summary>
 ''' <remarks></remarks>
 Public Class UIUCLDAPUser
@@ -41,32 +40,6 @@ Public Class UIUCLDAPUser
     Else
       Return ""
     End If
-  End Function
-
-  ''' <summary>
-  ''' Return a PREMIS Agent object for the given NetID
-  ''' </summary>
-  ''' <param name="netid"></param>
-  ''' <returns></returns>
-  ''' <remarks></remarks>
-  Public Shared Function GetPremisAgent(ByVal netid As String) As PremisAgent
-    Dim ldap As New UIUCLDAPUser(netid)
-    Dim agent As PremisAgent = New PremisAgent("UIUC_NETID", netid)
-    agent.AgentIdentifiers.Add(New PremisIdentifier("EMAIL", ldap.EMail))
-    agent.AgentNames.Add(ldap.DisplayName)
-    agent.AgentType = "PERSON"
-    agent.AgentNotes.Add(ldap.Title & ", " & ldap.HomeDepartment)
-
-    Return agent
-  End Function
-
-  ''' <summary>
-  ''' Return a PREMIS Agent object for the currently logged in user
-  ''' </summary>
-  ''' <returns></returns>
-  ''' <remarks></remarks>
-  Public Shared Function GetPremisAgent() As PremisAgent
-    Return UIUCLDAPUser.GetPremisAgent(Principal.WindowsIdentity.GetCurrent.Name)
   End Function
 
 
