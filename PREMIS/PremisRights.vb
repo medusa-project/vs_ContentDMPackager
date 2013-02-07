@@ -35,9 +35,12 @@ Public Class PremisRights
     RightsStatements.Add(rightsStatement)
   End Sub
 
-  Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer)
+  Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer, Optional IncludeSchemaLocation As Boolean = False)
     xmlwr.WriteStartElement("rights", PremisContainer.PremisNamespace)
-    xmlwr.WriteAttributeString("version", "2.1")
+    xmlwr.WriteAttributeString("version", PremisContainer.PremisVersion)
+    If IncludeSchemaLocation = True Then
+      xmlwr.WriteAttributeString("xsi", "schemaLocation", "http://www.w3.org/2001/XMLSchema-instance", String.Format("{0} {1}", PremisContainer.PremisNamespace, PremisContainer.PremisSchema))
+    End If
     If Not String.IsNullOrWhiteSpace(XmlId) Then
       xmlwr.WriteAttributeString("xmlID", XmlId)
     End If

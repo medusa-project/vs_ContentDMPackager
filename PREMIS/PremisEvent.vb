@@ -77,37 +77,44 @@ Public Class PremisEvent
     EventDateTime = dateTime
   End Sub
 
-  Public Sub LinkToAgent(ByVal agt As PremisAgent)
+  Public Sub LinkToAgent(ByVal agt As PremisAgent, Optional twoWay As Boolean = False)
     LinkedAgents.Add(agt, New List(Of String))
-    'Reverse Link
-    If Not agt.LinkedEvents.Contains(Me) Then
-      agt.LinkToEvent(Me)
+    If twoWay = True Then
+      'Reverse Link
+      If Not agt.LinkedEvents.Contains(Me) Then
+        agt.LinkToEvent(Me)
+      End If
     End If
   End Sub
 
-  Public Sub LinkToAgent(ByVal agt As PremisAgent, ByVal role As String)
-    Me.LinkToAgent(agt)
+  Public Sub LinkToAgent(ByVal agt As PremisAgent, ByVal role As String, Optional twoWay As Boolean = False)
+    Me.LinkToAgent(agt, twoWay)
     LinkedAgents.Item(agt).Add(role)
   End Sub
 
-  Public Sub LinkToObject(ByVal obj As PremisObject)
+  Public Sub LinkToObject(ByVal obj As PremisObject, Optional twoWay As Boolean = True)
     LinkedObjects.Add(obj, New List(Of String))
-    'Reverse Link
-    If Not obj.LinkedEvents.Contains(Me) Then
-      obj.LinkToEvent(Me)
+    If twoWay = True Then
+      'Reverse Link
+      If Not obj.LinkedEvents.Contains(Me) Then
+        obj.LinkToEvent(Me)
+      End If
     End If
   End Sub
 
-  Public Sub LinkToObject(ByVal obj As PremisObject, ByVal role As String)
-    Me.LinkToObject(obj)
+  Public Sub LinkToObject(ByVal obj As PremisObject, ByVal role As String, Optional twoWay As Boolean = True)
+    Me.LinkToObject(obj, twoWay)
     LinkedObjects.Item(obj).Add(role)
   End Sub
 
-  Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pcont As PremisContainer)
+  Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pcont As PremisContainer, Optional IncludeSchemaLocation As Boolean = False)
     xmlwr.WriteStartElement("event", PremisContainer.PremisNamespace)
-    xmlwr.WriteAttributeString("version", "2.1")
+    xmlwr.WriteAttributeString("version", PremisContainer.PremisVersion)
     If Not String.IsNullOrWhiteSpace(XmlId) Then
       xmlwr.WriteAttributeString("xmlID", XmlId)
+    End If
+    If IncludeSchemaLocation = True Then
+      xmlwr.WriteAttributeString("xsi", "schemaLocation", "http://www.w3.org/2001/XMLSchema-instance", String.Format("{0} {1}", PremisContainer.PremisNamespace, PremisContainer.PremisSchema))
     End If
 
     xmlwr.WriteStartElement("eventIdentifier")

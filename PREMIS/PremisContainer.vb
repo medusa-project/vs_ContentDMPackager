@@ -9,6 +9,8 @@ Imports System.Xml.XPath
 Public Class PremisContainer
 
   Public Const PremisNamespace As String = "info:lc/xmlns/premis-v2"
+  Public Const PremisSchema As String = "http://www.loc.gov/standards/premis/v2/premis-v2-2.xsd"
+  Public Const PremisVersion = "2.2"
 
   Private Shared _schemas As XmlSchemaSet
 
@@ -23,6 +25,9 @@ Public Class PremisContainer
   Public Property Rights As List(Of PremisRights)
 
   Public Property ValidateXML As Boolean = True
+
+  Public Property PersistedEntityTypes As PremisEntityTypes = PremisEntityTypes.All 'determine which entities are persisted to XML files
+
 
   Public Function FindSingleObject(ByVal idType As String, ByVal idValue As String) As PremisObject
     Return FindObjects(idType, idValue).FirstOrDefault
@@ -74,6 +79,7 @@ Public Class PremisContainer
     Agents = New List(Of PremisAgent)
     Events = New List(Of PremisEvent)
     Rights = New List(Of PremisRights)
+
   End Sub
 
   Public Sub New(ByVal obj As PremisObject)
@@ -322,8 +328,8 @@ Public Class PremisContainer
 
   Public Sub GetXMLRoot(xmlwr As XmlWriter)
     xmlwr.WriteStartElement("premis", PremisContainer.PremisNamespace)
-    xmlwr.WriteAttributeString("xsi", "schemaLocation", "http://www.w3.org/2001/XMLSchema-instance", "info:lc/xmlns/premis-v2 http://www.loc.gov/standards/premis/v2/premis-v2-1.xsd")
-    xmlwr.WriteAttributeString("version", "2.1")
+    xmlwr.WriteAttributeString("xsi", "schemaLocation", "http://www.w3.org/2001/XMLSchema-instance", String.Format("{0} {1}", PremisContainer.PremisNamespace, PremisContainer.PremisSchema))
+    xmlwr.WriteAttributeString("version", PremisContainer.PremisVersion)
     xmlwr.WriteAttributeString("xmlns", "xlink", Nothing, "http://www.w3.org/1999/xlink")
   End Sub
 
@@ -333,21 +339,29 @@ Public Class PremisContainer
 
     Me.GetXMLRoot(xmlwr)
 
-    For Each pr As PremisObject In Objects
-      pr.GetXML(xmlwr, Me)
-    Next
+    If PersistedEntityTypes.HasFlag(PremisEntityTypes.Objects) Then
+      For Each pr As PremisObject In Objects
+        pr.GetXML(xmlwr, Me)
+      Next
+    End If
 
-    For Each pr As PremisEvent In Events
-      pr.GetXML(xmlwr, Me)
-    Next
+    If PersistedEntityTypes.HasFlag(PremisEntityTypes.Events) Then
+      For Each pr As PremisEvent In Events
+        pr.GetXML(xmlwr, Me)
+      Next
+    End If
 
-    For Each pr As PremisAgent In Agents
-      pr.GetXML(xmlwr, Me)
-    Next
+    If PersistedEntityTypes.HasFlag(PremisEntityTypes.Agents) Then
+      For Each pr As PremisAgent In Agents
+        pr.GetXML(xmlwr, Me)
+      Next
+    End If
 
-    For Each pr As PremisRights In Rights
-      pr.GetXML(xmlwr, Me)
-    Next
+    If PersistedEntityTypes.HasFlag(PremisEntityTypes.Rights) Then
+      For Each pr As PremisRights In Rights
+        pr.GetXML(xmlwr, Me)
+      Next
+    End If
 
     xmlwr.WriteEndElement()
     xmlwr.Close()
@@ -366,7 +380,7 @@ Public Class PremisContainer
 
     If _schemas Is Nothing Then
       _schemas = New XmlSchemaSet
-      _schemas.Add(PremisContainer.PremisNamespace, "http://www.loc.gov/standards/premis/v2/premis-v2-1.xsd")
+      _schemas.Add(PremisContainer.PremisNamespace, PremisContainer.PremisSchema)
     End If
 
     Dim document As XmlDocument = New XmlDocument()
@@ -436,26 +450,43 @@ Public Class PremisContainer
   ''' Save each Premis Entity as a separate XML file
   ''' </summary>
   ''' <param name="folder"></param>
-  ''' <remarks></remarks>
+  ''' <remarks>Objects without a filename index, or the first object in the list are consider the root object for the container
+  ''' and are named differently.  This embeds some Medusa business logic into this library, which probably isn't ideal.</remarks>
   Public Sub SaveEachXML(folder As String)
 
+    If PersistedEntityTypes.HasFlag(PremisEntityTypes.Objects) Then
+      For Each pr As PremisObject In Objects
+        If String.IsNullOrWhiteSpace(pr.GetDefaultFileNameIndex) Then
+          'if there is no index then this is the root object
+          pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_root_object_", "xml")), Me)
+        Else
+          If pr.GetDefaultFileName("", "") = Objects.First.GetDefaultFileName("", "") Then
+            'if this is the first object in the list then it is a root object
+            pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_root_object_", "xml")), Me)
+          Else
+            pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_object_", "xml")), Me)
+          End If
+        End If
+      Next
+    End If
 
-    For Each pr As PremisObject In Objects
-      pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_object_", "xml")))
-    Next
+    If PersistedEntityTypes.HasFlag(PremisEntityTypes.Events) Then
+      For Each pr As PremisEvent In Events
+        pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_event_", "xml")), Me)
+      Next
+    End If
 
-    For Each pr As PremisEvent In Events
-      pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_event_", "xml")))
-    Next
+    If PersistedEntityTypes.HasFlag(PremisEntityTypes.Agents) Then
+      For Each pr As PremisAgent In Agents
+        pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_agent_", "xml")), Me)
+      Next
+    End If
 
-    For Each pr As PremisAgent In Agents
-      pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_agent_", "xml")))
-    Next
-
-    For Each pr As PremisRights In Rights
-      pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_rights_", "xml")))
-    Next
-
+    If PersistedEntityTypes.HasFlag(PremisEntityTypes.Rights) Then
+      For Each pr As PremisRights In Rights
+        pr.SaveXML(Path.Combine(folder, pr.GetDefaultFileName("premis_rights_", "xml")), Me)
+      Next
+    End If
 
   End Sub
 
@@ -495,6 +526,7 @@ Public Class PremisContainer
 
     For Each pObj As PremisObject In Me.Objects.Where(Function(o) o.ObjectCategory = PremisObjectCategory.Representation)
       Dim cont As New PremisContainer()
+      cont.PersistedEntityTypes = Me.PersistedEntityTypes
 
       containerList.Add(cont)
 
@@ -525,7 +557,9 @@ Public Class PremisContainer
     If Not cont.Agents.Contains(agt) Then
       cont.Agents.Add(agt)
 
-      'NOTE: linked events and rights should end up in the contained via other means, so we do not enumerate htem here
+      'NOTE: linked events and rights should end up in the contained via other means, so we do not enumerate them here
+      'Also, in most cases for Medusa, the agent will not link back to its events and rights; these links are generally one-way from the event or rights back to the
+      'agent, but not from the agent back to them
 
     End If
   End Sub
@@ -543,6 +577,8 @@ Public Class PremisContainer
       For Each agt As PremisAgent In rgtS.LinkedAgents.Keys
         Me.AddAgentAndChildren(agt, cont)
       Next
+
+      'NOTE: Medusa rights currently only apply to root representation objects, so no need to enumerate over linked objects because they will have been added already
 
     End If
   End Sub
@@ -577,3 +613,13 @@ Public Class PremisContainer
 
 End Class
 
+<FlagsAttribute()> _
+Public Enum PremisEntityTypes
+  None = 0
+  Agents = 1
+  Events = 2
+  Objects = 4
+  Rights = 8
+  All = 8 + 4 + 2 + 1
+  AllExceptAgents = 8 + 4 + 2
+End Enum

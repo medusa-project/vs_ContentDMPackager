@@ -60,9 +60,10 @@ Public Class PremisAgent
     End Get
   End Property
 
-  Public Shared Function GetCurrentSoftwareAgent(idtype As String, idvalue As String) As PremisAgent
+  Public Shared Function GetCurrentSoftwareAgent() As PremisAgent
 
-    Dim softAgent As New PremisAgent(idtype, idvalue)
+    Dim softAgent As New PremisAgent("SOFTWARE_VERSION", String.Format("{0} {1}",
+                                     My.Application.Info.Title, My.Application.Info.Version))
     softAgent.AgentType = "SOFTWARE"
     softAgent.AgentNames.Add(String.Format("{0} {1} [{2}]",
                                      My.Application.Info.Title, My.Application.Info.Version, My.Application.Info.CompanyName))
@@ -71,27 +72,34 @@ Public Class PremisAgent
                                       My.Computer.Name, My.Computer.Info.OSFullName.Trim,
                                      My.Computer.Info.OSVersion, My.Application.UICulture.EnglishName))
 
+    softAgent.AgentNotes.Add(String.Format("{0}, {1}", My.Application.Info.ProductName, My.Application.Info.Copyright))
+    softAgent.AgentNotes.Add(String.Format("{0}", My.Application.Info.Description))
+
     Return softAgent
   End Function
 
   Public Shared Function GetCurrentUserAgent(idtype As String, idvalue As String) As PremisAgent
-    'TODO: This function maybe ?
+    'TODO: This function maybe YAGNI?
     Return Nothing
   End Function
 
-  Public Sub LinkToEvent(ByVal evt As PremisEvent)
+  Public Sub LinkToEvent(ByVal evt As PremisEvent, Optional twoWay As Boolean = True)
     LinkedEvents.Add(evt)
-    'Reverse link
-    If Not evt.LinkedAgents.ContainsKey(Me) Then
-      evt.LinkToAgent(Me)
+    If twoWay = True Then
+      'Reverse link
+      If Not evt.LinkedAgents.ContainsKey(Me) Then
+        evt.LinkToAgent(Me)
+      End If
     End If
   End Sub
 
-  Public Sub LinkToRightsStatement(ByVal rStmt As PremisRightsStatement)
+  Public Sub LinkToRightsStatement(ByVal rStmt As PremisRightsStatement, Optional twoWay As Boolean = True)
     LinkedRightsStatements.Add(rStmt)
-    'Reverse link
-    If Not rStmt.LinkedAgents.ContainsKey(Me) Then
-      rStmt.LinkToAgent(Me)
+    If twoWay = True Then
+      'Reverse link
+      If Not rStmt.LinkedAgents.ContainsKey(Me) Then
+        rStmt.LinkToAgent(Me)
+      End If
     End If
   End Sub
 
@@ -110,11 +118,14 @@ Public Class PremisAgent
 
   End Sub
 
-  Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer)
+  Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer, Optional IncludeSchemaLocation As Boolean = False)
     xmlwr.WriteStartElement("agent", PremisContainer.PremisNamespace)
-    xmlwr.WriteAttributeString("version", "2.1")
+    xmlwr.WriteAttributeString("version", PremisContainer.PremisVersion)
     If Not String.IsNullOrWhiteSpace(XmlId) Then
       xmlwr.WriteAttributeString("xmlID", XmlId)
+    End If
+    If IncludeSchemaLocation = True Then
+      xmlwr.WriteAttributeString("xsi", "schemaLocation", "http://www.w3.org/2001/XMLSchema-instance", String.Format("{0} {1}", PremisContainer.PremisNamespace, PremisContainer.PremisSchema))
     End If
 
     For Each id As PremisIdentifier In AgentIdentifiers

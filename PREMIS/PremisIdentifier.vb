@@ -18,6 +18,7 @@ Public Class PremisIdentifier
   End Sub
 
   Public Overloads Function Equals(ByVal other As PremisIdentifier) As Boolean Implements System.IEquatable(Of PremisIdentifier).Equals
+    If other Is Nothing Then Return False
     Return Me.IdentifierType = other.IdentifierType AndAlso Me.IdentifierValue = other.IdentifierValue
   End Function
 
@@ -36,6 +37,7 @@ Public Class PremisIdentifier
   End Function
 
   Public Shared Operator =(ByVal id1 As PremisIdentifier, ByVal id2 As PremisIdentifier) As Boolean
+    If id1 Is Nothing Or id2 Is Nothing Then Return False
     Return id1.Equals(id2)
   End Operator
 

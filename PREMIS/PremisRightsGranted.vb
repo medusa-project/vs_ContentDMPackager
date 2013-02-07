@@ -12,6 +12,10 @@ Public Class PremisRightsGranted
 
   Public Property TermOfGrantEndDate As String
 
+  Public Property TermOfRestrictionStartDate As String
+
+  Public Property TermOfRestrictionEndDate As String
+
   Public Property RightsGrantedNotes As List(Of String)
 
   Public Sub New(elem As XmlElement)
@@ -43,6 +47,16 @@ Public Class PremisRightsGranted
       TermOfGrantEndDate = nd.InnerText
     Next
 
+    nds = elem.SelectNodes("premis:termOfRestriction/premis:startDate", xmlns)
+    For Each nd As XmlElement In nds
+      TermOfRestrictionStartDate = nd.InnerText
+    Next
+
+    nds = elem.SelectNodes("premis:termOfRestriction/premis:endDate", xmlns)
+    For Each nd As XmlElement In nds
+      TermOfRestrictionEndDate = nd.InnerText
+    Next
+
     nds = elem.SelectNodes("premis:rightsGrantedNote", xmlns)
     For Each nd As XmlElement In nds
       RightsGrantedNotes.Add(nd.InnerText)
@@ -56,14 +70,14 @@ Public Class PremisRightsGranted
   End Sub
 
   Public Sub New(ByVal act As String, ByVal startDate As String)
-    Me.Act = act
+    Me.New(act)
     TermOfGrantStartDate = startDate
-    Restrictions = New List(Of String)
-    RightsGrantedNotes = New List(Of String)
   End Sub
 
   Public Sub New(ByVal act As String)
-    Me.New(act, Now.ToString("s"))
+    Me.Act = act
+    Restrictions = New List(Of String)
+    RightsGrantedNotes = New List(Of String)
   End Sub
 
   Public Sub GetXML(ByVal xmlwr As XmlWriter)
@@ -72,12 +86,22 @@ Public Class PremisRightsGranted
     For Each rstr As String In Restrictions
       xmlwr.WriteElementString("restriction", rstr)
     Next
-    xmlwr.WriteStartElement("termOfGrant")
-    xmlwr.WriteElementString("startDate", TermOfGrantStartDate)
-    If Not String.IsNullOrWhiteSpace(TermOfGrantEndDate) Then
-      xmlwr.WriteElementString("endDate", TermOfGrantEndDate)
+    If Not String.IsNullOrWhiteSpace(TermOfGrantStartDate) Then
+      xmlwr.WriteStartElement("termOfGrant")
+      xmlwr.WriteElementString("startDate", TermOfGrantStartDate)
+      If Not String.IsNullOrWhiteSpace(TermOfGrantEndDate) Then
+        xmlwr.WriteElementString("endDate", TermOfGrantEndDate)
+      End If
+      xmlwr.WriteEndElement()
     End If
-    xmlwr.WriteEndElement()
+    If Not String.IsNullOrWhiteSpace(TermOfRestrictionStartDate) Then
+      xmlwr.WriteStartElement("termOfRestriction")
+      xmlwr.WriteElementString("startDate", TermOfRestrictionStartDate)
+      If Not String.IsNullOrWhiteSpace(TermOfRestrictionEndDate) Then
+        xmlwr.WriteElementString("endDate", TermOfRestrictionEndDate)
+      End If
+      xmlwr.WriteEndElement()
+    End If
     For Each notes As String In RightsGrantedNotes
       xmlwr.WriteElementString("rightsGrantedNotes", notes)
     Next

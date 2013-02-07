@@ -50,29 +50,33 @@ Public Class PremisRightsStatement
 
   End Sub
 
-  Public Sub LinkToAgent(ByVal agt As PremisAgent)
+  Public Sub LinkToAgent(ByVal agt As PremisAgent, Optional twoWay As Boolean = False)
     LinkedAgents.Add(agt, New List(Of String))
-    'Reverse Link
-    If Not agt.LinkedRightsStatements.Contains(Me) Then
-      agt.LinkToRightsStatement(Me)
+    If twoWay = True Then
+      'Reverse Link
+      If Not agt.LinkedRightsStatements.Contains(Me) Then
+        agt.LinkToRightsStatement(Me)
+      End If
     End If
   End Sub
 
-  Public Sub LinkToAgent(ByVal agt As PremisAgent, ByVal role As String)
-    Me.LinkToAgent(agt)
+  Public Sub LinkToAgent(ByVal agt As PremisAgent, ByVal role As String, Optional twoWay As Boolean = False)
+    Me.LinkToAgent(agt, twoWay)
     LinkedAgents.Item(agt).Add(role)
   End Sub
 
-  Public Sub LinkToObject(ByVal obj As PremisObject)
+  Public Sub LinkToObject(ByVal obj As PremisObject, Optional twoWay As Boolean = True)
     LinkedObjects.Add(obj, New List(Of String))
-    'Reverse Link
-    If Not obj.LinkedRightsStatements.Contains(Me) Then
-      obj.LinkToRightsStatement(Me)
+    If twoWay = True Then
+      'Reverse Link
+      If Not obj.LinkedRightsStatements.Contains(Me) Then
+        obj.LinkToRightsStatement(Me)
+      End If
     End If
   End Sub
 
-  Public Sub LinkToObject(ByVal obj As PremisObject, ByVal role As String)
-    Me.LinkToObject(obj)
+  Public Sub LinkToObject(ByVal obj As PremisObject, ByVal role As String, Optional twoWay As Boolean = True)
+    Me.LinkToObject(obj, twoWay)
     LinkedObjects.Item(obj).Add(role)
   End Sub
 

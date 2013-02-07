@@ -3,7 +3,6 @@ Imports System.IO
 Imports System.Text
 Imports System.Security.Cryptography
 Imports System.Configuration
-Imports Uiuc.Library.MetadataUtilities
 
 Public Class PremisObjectCharacteristics
 
@@ -113,37 +112,6 @@ Public Class PremisObjectCharacteristics
     xmlwr.WriteEndElement()
 
   End Sub
-
-  Public Shared Function CharacterizeFile(ByVal filepath As String, ByVal proposedMime As String) As PremisObjectCharacteristics
-    'TODO: Make the FITS utility an option for this
-
-    Dim strm As Stream = File.OpenRead(filepath)
-    Dim pObjChar As New PremisObjectCharacteristics()
-
-    Dim alg As String = MedusaAppSettings.Settings.ChecksumAlgorithm
-    Dim sha1 As HashAlgorithm = HashAlgorithm.Create(alg)
-
-    Dim hash() As Byte = sha1.ComputeHash(strm)
-
-    strm.Close()
-
-    Dim fInfo As New FileInfo(filepath)
-
-    Dim pFix As New PremisFixity(alg, MetadataFunctions.BytesToHexStr(hash))
-    pObjChar.Fixities.Add(pFix)
-    pObjChar.Size = fInfo.Length
-
-    Dim mime As String = MetadataFunctions.GetMimeFromFile(filepath, proposedMime)
-    If Not String.IsNullOrWhiteSpace(mime) Then
-      Dim pForm As New PremisFormat(mime)
-      pObjChar.Formats.Add(pForm)
-    End If
-
-
-
-    Return pObjChar
-
-  End Function
 
 
 

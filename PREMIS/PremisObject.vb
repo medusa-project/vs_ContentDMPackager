@@ -76,19 +76,23 @@ Public Class PremisObject
 
   End Sub
 
-  Public Sub LinkToEvent(ByVal evt As PremisEvent)
+  Public Sub LinkToEvent(ByVal evt As PremisEvent, Optional twoWay As Boolean = True)
     LinkedEvents.Add(evt)
-    'Add Reverse link
-    If Not evt.LinkedObjects.ContainsKey(Me) Then
-      evt.LinkToObject(Me)
+    If twoWay = True Then
+      'Add Reverse link
+      If Not evt.LinkedObjects.ContainsKey(Me) Then
+        evt.LinkToObject(Me)
+      End If
     End If
   End Sub
 
-  Public Sub LinkToRightsStatement(ByVal rStmt As PremisRightsStatement)
+  Public Sub LinkToRightsStatement(ByVal rStmt As PremisRightsStatement, Optional twoWay As Boolean = True)
     LinkedRightsStatements.Add(rStmt)
-    'Add Reverse link
-    If Not rStmt.LinkedObjects.ContainsKey(Me) Then
-      rStmt.LinkToObject(Me)
+    If twoWay = True Then
+      'Add Reverse link
+      If Not rStmt.LinkedObjects.ContainsKey(Me) Then
+        rStmt.LinkToObject(Me)
+      End If
     End If
   End Sub
 
@@ -107,7 +111,16 @@ Public Class PremisObject
     Me.Relationships.Add(pRel)
   End Sub
 
-  Public Sub RelateToObject(ByVal typ As String, ByVal subTyp As String, ByVal obj As PremisObject, ByVal evt As PremisEvent)
+  ''' <summary>
+  ''' Create a relationship between this object and some other object with an associated event
+  ''' </summary>
+  ''' <param name="typ"></param>
+  ''' <param name="subTyp"></param>
+  ''' <param name="obj"></param>
+  ''' <param name="evt"></param>
+  ''' <param name="twoWay">If true, link the event back to the two objects</param>
+  ''' <remarks></remarks>
+  Public Sub RelateToObject(ByVal typ As String, ByVal subTyp As String, ByVal obj As PremisObject, ByVal evt As PremisEvent, Optional twoWay As Boolean = True)
     'If this object already has relationship with the same type and subtype and event just add the obj to that relationship
 
     Dim relats = Me.Relationships.Where(Function(r) r.RelationshipType = typ And r.RelationshipSubType = subTyp And _
@@ -125,10 +138,13 @@ Public Class PremisObject
 
     End If
 
-    If Not evt.LinkedObjects.ContainsKey(Me) Then
-      evt.LinkedObjects.Add(Me, New List(Of String))
+    If twoWay = True Then
+      'Add Reverse link to objects
+      If Not evt.LinkedObjects.ContainsKey(Me) Then
+        evt.LinkedObjects.Add(Me, New List(Of String))
+      End If
+      evt.LinkedObjects.Add(obj, New List(Of String))
     End If
-    evt.LinkedObjects.Add(obj, New List(Of String))
 
   End Sub
 
@@ -159,10 +175,13 @@ Public Class PremisObject
     SignificantProperties = New List(Of PremisSignificantProperties)
   End Sub
 
-  Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer)
+  Public Overrides Sub GetXML(ByVal xmlwr As XmlWriter, pCont As PremisContainer, Optional IncludeSchemaLocation As Boolean = False)
     xmlwr.WriteStartElement("object", PremisContainer.PremisNamespace)
     xmlwr.WriteAttributeString("xsi", "type", "http://www.w3.org/2001/XMLSchema-instance", [Enum].GetName(GetType(PremisObjectCategory), ObjectCategory).ToLower)
-    xmlwr.WriteAttributeString("version", "2.1")
+    xmlwr.WriteAttributeString("version", PremisContainer.PremisVersion)
+    If IncludeSchemaLocation = True Then
+      xmlwr.WriteAttributeString("xsi", "schemaLocation", "http://www.w3.org/2001/XMLSchema-instance", String.Format("{0} {1}", PremisContainer.PremisNamespace, PremisContainer.PremisSchema))
+    End If
     If Not String.IsNullOrWhiteSpace(XmlId) Then
       xmlwr.WriteAttributeString("xmlID", XmlId)
     End If
