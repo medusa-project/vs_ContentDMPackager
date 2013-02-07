@@ -7,8 +7,12 @@ Imports System.Text
 Imports System.Collections.Specialized
 Imports System.Security
 Imports Uiuc.Library.Premis
-Imports Uiuc.Library.MetadataUtilities
+Imports Uiuc.Library.Medusa
 
+''' <summary>
+''' A client program for interacting with the UIUC Library's Handle Web Service
+''' </summary>
+''' <remarks></remarks>
 Public Class HandleClient
 
   Public Property local_id As String
@@ -322,7 +326,7 @@ Public Class HandleClient
   Private Sub UpdateDatabase(action As String)
     If status = HttpStatusCode.Created Or status = HttpStatusCode.NoContent Then
 
-      Using db As New HandleManagerDataContext
+      Using db As New HandleManagerDataContext(MedusaAppSettings.Settings.ConnectionString)
         Dim ha As New HandleAction
         ha.action = action
         ha.date = Now
