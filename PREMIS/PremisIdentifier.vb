@@ -26,7 +26,7 @@ Public Class PremisIdentifier
     If other Is Nothing Then Return MyBase.Equals(other)
 
     If Not TypeOf other Is PremisIdentifier Then
-      Throw New InvalidCastException("The 'obj' argument is not a PremisIdentifier object.")
+      Return False
     Else
       Return Equals(DirectCast(other, PremisIdentifier))
     End If

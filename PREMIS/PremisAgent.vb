@@ -183,7 +183,7 @@ Public Class PremisAgent
   End Function
 
   Public Shared Function GetFileName(id As PremisIdentifier, prefix As String, ext As String) As String
-    Dim localPart As String = String.Format("{1}", id.IdentifierType, id.IdentifierValue)
+    Dim localPart As String = id.IdentifierValue
 
     If (Not String.IsNullOrWhiteSpace(ext)) AndAlso (Not ext.StartsWith(".")) Then
       ext = "." & ext
