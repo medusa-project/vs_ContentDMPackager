@@ -5,6 +5,7 @@ Imports System.Runtime.InteropServices
 Imports System.Security.Permissions
 Imports System.IO
 Imports System.Text
+Imports System.Web
 
 ''' <summary>
 ''' Collection of misc. shared functions for dealing with metadata
@@ -92,13 +93,16 @@ Public Class MetadataFunctions
   ''' <returns></returns>
   ''' <remarks></remarks>
   Public Shared Function GetContentType(fileName As String) As String
-    Dim contentType As String = "application/octet-stream"
-    Dim ext As String = System.IO.Path.GetExtension(fileName).ToLower()
-    Dim registryKey As Microsoft.Win32.RegistryKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(ext)
-    If registryKey IsNot Nothing AndAlso registryKey.GetValue("Content Type") IsNot Nothing Then
-      contentType = registryKey.GetValue("Content Type").ToString()
-    End If
-    Return contentType
+
+    Return MimeMapping.GetMimeMapping(fileName)
+
+    'Dim contentType As String = "application/octet-stream"
+    'Dim ext As String = System.IO.Path.GetExtension(fileName).ToLower()
+    'Dim registryKey As Microsoft.Win32.RegistryKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(ext)
+    'If registryKey IsNot Nothing AndAlso registryKey.GetValue("Content Type") IsNot Nothing Then
+    '  contentType = registryKey.GetValue("Content Type").ToString()
+    'End If
+    'Return contentType
   End Function
 
 
