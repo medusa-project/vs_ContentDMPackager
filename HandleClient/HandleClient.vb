@@ -326,7 +326,7 @@ Public Class HandleClient
   Private Sub UpdateDatabase(action As String)
     If status = HttpStatusCode.Created Or status = HttpStatusCode.NoContent Then
 
-      Using db As New HandleManagerDataContext(MedusaAppSettings.Settings.ConnectionString)
+      Using db As New HandleManagerDataContext(MedusaAppSettings.Settings.MedusaConnectionString)
         Dim ha As New HandleAction
         ha.action = action
         ha.date = Now
