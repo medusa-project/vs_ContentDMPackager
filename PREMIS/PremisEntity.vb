@@ -22,18 +22,13 @@ Public MustInherit Class PremisEntity
   End Function
 
   Public Sub SaveXML(ByVal fileName As String, pCont As PremisContainer)
-    Dim txtwr As StreamWriter = Nothing
-    Try
-      txtwr = New StreamWriter(fileName, False, Encoding.UTF8)
+
+    Using txtwr As New StreamWriter(fileName, False, Encoding.UTF8)
       Using xmlwr As XmlWriter = XmlWriter.Create(txtwr, New XmlWriterSettings With {.Indent = True, .Encoding = Encoding.UTF8, .OmitXmlDeclaration = True})
-        txtwr = Nothing
         Me.GetXML(xmlwr, pCont, True)
+        xmlwr.Close()
       End Using
-    Finally
-      If txtwr IsNot Nothing Then
-        txtwr.Dispose()
-      End If
-    End Try
+    End Using
   End Sub
 
 End Class

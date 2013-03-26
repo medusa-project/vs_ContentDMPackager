@@ -11,6 +11,12 @@ Public Class PremisRightsStatement
 
   Public Property CopyrightInformation As PremisCopyrightInformation
 
+  Public Property LicenseInformation As PremisLicenseInformation
+
+  Public Property StatuteInformation As List(Of PremisStatuteInformation)
+
+  Public Property OtherRightsInformation As PremisOtherRightsInformation
+
   Public Property RightsGranted As List(Of PremisRightsGranted)
 
   Public Property LinkedAgents As Dictionary(Of PremisAgent, List(Of String))
@@ -21,6 +27,7 @@ Public Class PremisRightsStatement
     LinkedAgents = New Dictionary(Of PremisAgent, List(Of String))
     LinkedObjects = New Dictionary(Of PremisObject, List(Of String))
     RightsGranted = New List(Of PremisRightsGranted)
+    StatuteInformation = New List(Of PremisStatuteInformation)
 
     Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
     xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)
@@ -40,6 +47,21 @@ Public Class PremisRightsStatement
     nds = elem.SelectNodes("premis:copyrightInformation", xmlns)
     For Each nd As XmlElement In nds
       CopyrightInformation = New PremisCopyrightInformation(nd)
+    Next
+
+    nds = elem.SelectNodes("premis:licenseInformation", xmlns)
+    For Each nd As XmlElement In nds
+      LicenseInformation = New PremisLicenseInformation(nd)
+    Next
+
+    nds = elem.SelectNodes("premis:statuteInformation", xmlns)
+    For Each nd As XmlElement In nds
+      StatuteInformation.Add(New PremisStatuteInformation(nd))
+    Next
+
+    nds = elem.SelectNodes("premis:otherRightsInformation", xmlns)
+    For Each nd As XmlElement In nds
+      OtherRightsInformation = New PremisOtherRightsInformation(nd)
     Next
 
     nds = elem.SelectNodes("premis:rightsGranted", xmlns)
@@ -90,6 +112,7 @@ Public Class PremisRightsStatement
     LinkedAgents = New Dictionary(Of PremisAgent, List(Of String))
     LinkedObjects = New Dictionary(Of PremisObject, List(Of String))
     RightsGranted = New List(Of PremisRightsGranted)
+    StatuteInformation = New List(Of PremisStatuteInformation)
   End Sub
 
   Public Sub GetXML(ByVal xmlwr As XmlWriter)
@@ -104,6 +127,18 @@ Public Class PremisRightsStatement
 
     If CopyrightInformation IsNot Nothing Then
       CopyrightInformation.GetXML(xmlwr)
+    End If
+
+    If LicenseInformation IsNot Nothing Then
+      LicenseInformation.GetXML(xmlwr)
+    End If
+
+    For Each statute As PremisStatuteInformation In StatuteInformation
+      statute.GetXML(xmlwr)
+    Next
+
+    If OtherRightsInformation IsNot Nothing Then
+      OtherRightsInformation.GetXML(xmlwr)
     End If
 
     For Each grant As PremisRightsGranted In RightsGranted

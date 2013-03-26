@@ -102,14 +102,17 @@
     <Compile Include="PremisFixity.vb" />
     <Compile Include="PremisFormat.vb" />
     <Compile Include="PremisIdentifier.vb" />
+    <Compile Include="PremisLicenseInformation.vb" />
     <Compile Include="PremisObject.vb" />
     <Compile Include="PremisObjectCharacteristics.vb" />
+    <Compile Include="PremisOtherRightsInformation.vb" />
     <Compile Include="PremisPreservationLevel.vb" />
     <Compile Include="PremisRelationship.vb" />
     <Compile Include="PremisRights.vb" />
     <Compile Include="PremisRightsGranted.vb" />
     <Compile Include="PremisRightsStatement.vb" />
     <Compile Include="PremisSignificantProperties.vb" />
+    <Compile Include="PremisStatuteInformation.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

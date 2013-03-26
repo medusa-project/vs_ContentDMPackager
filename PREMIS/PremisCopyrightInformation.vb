@@ -56,7 +56,7 @@ Public Class PremisCopyrightInformation
     xmlwr.WriteStartElement("copyrightInformation")
     xmlwr.WriteElementString("copyrightStatus", CopyrightStatus)
     xmlwr.WriteElementString("copyrightJurisdiction", CopyrightJurisdiction)
-    If Not String.IsNullOrWhiteSpace("") Then
+    If Not String.IsNullOrWhiteSpace(CopyrightStatusDeterminationDate) Then
       xmlwr.WriteElementString("copyrightStatusDeterminationDate", CopyrightStatusDeterminationDate)
     End If
     For Each nt As String In CopyrightNotes
