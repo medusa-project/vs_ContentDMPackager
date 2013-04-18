@@ -21,6 +21,16 @@ Public Class PremisEvent
 
   Public Property LinkedObjects As Dictionary(Of PremisObject, List(Of String))
 
+  Public Overrides ReadOnly Property LocalIdentifierValue As String
+    Get
+      If Me.EventIdentifier.IdentifierType = "LOCAL" Then
+        Return Me.EventIdentifier.IdentifierValue
+      Else
+        Return Nothing
+      End If
+    End Get
+  End Property
+
   Public Sub New(elem As XmlElement)
     EventOutcomeInformation = New List(Of PremisEventOutcomeInformation)
     LinkedAgents = New Dictionary(Of PremisAgent, List(Of String))

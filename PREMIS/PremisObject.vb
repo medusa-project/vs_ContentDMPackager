@@ -275,7 +275,7 @@ Public Class PremisObject
     Return lid
   End Function
 
-  Public ReadOnly Property LocalIdentifierValue As String
+  Public Overrides ReadOnly Property LocalIdentifierValue As String
     Get
       Return ObjectIdentifiers.Where(Function(id) id.IdentifierType = "LOCAL").FirstOrDefault.IdentifierValue
     End Get

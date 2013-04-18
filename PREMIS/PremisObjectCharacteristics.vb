@@ -18,8 +18,25 @@ Public Class PremisObjectCharacteristics
 
   Public Property ObjectCharacteristicsExtensions As List(Of XmlDocument)
 
+  ''' <summary>
+  ''' Given the algorithm return the message digest; if the algorithm is not found return nothing
+  ''' </summary>
+  ''' <param name="algorithm"></param>
+  ''' <returns></returns>
+  ''' <remarks></remarks>
+  Public Function GetMessageDigest(algorithm As String) As String
+    Dim ret As String = Nothing
+
+    Dim s = Me.Fixities.Where(Function(f) f.MessageDigestAlgorithm = algorithm)
+    If s.Count > 0 Then
+      ret = s.First.MessageDigest
+    End If
+
+    Return ret
+  End Function
+
   Public Sub New(elem As XmlElement)
-    Me.new()
+    Me.New()
 
     Dim xmlns As New XmlNamespaceManager(elem.OwnerDocument.NameTable)
     xmlns.AddNamespace("premis", PremisContainer.PremisNamespace)

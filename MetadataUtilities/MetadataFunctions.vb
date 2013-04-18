@@ -144,4 +144,16 @@ Public Class MetadataFunctions
     End If
   End Function
 
+  Public Shared Function IsHexString(s As String) As Boolean
+    For Each c As Char In s
+      Dim isHexChar As Boolean = (c >= "0"c And c <= "9"c) Or (c >= "a"c And c <= "f"c) Or (c >= "A"c And c <= "F"c)
+      If Not isHexChar Then
+        Return False
+      End If
+    Next
+
+    Return True
+  End Function
+
+
 End Class

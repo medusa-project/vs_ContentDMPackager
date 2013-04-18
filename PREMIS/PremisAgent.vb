@@ -54,7 +54,7 @@ Public Class PremisAgent
 
   End Sub
 
-  Public ReadOnly Property LocalIdentifierValue As String
+  Public Overrides ReadOnly Property LocalIdentifierValue As String
     Get
       Return AgentIdentifiers.Where(Function(id) id.IdentifierType = "LOCAL").FirstOrDefault.IdentifierValue
     End Get

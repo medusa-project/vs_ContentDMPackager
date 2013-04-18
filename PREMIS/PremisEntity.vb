@@ -10,6 +10,7 @@ Public MustInherit Class PremisEntity
 
   Public MustOverride Function GetDefaultFileName(prefix As String, ext As String) As String
 
+  Public MustOverride ReadOnly Property LocalIdentifierValue As String
 
   ''' <summary>
   ''' Return just the index suffix part of a local identifier, i.e. for the identifier "MEDUSA:XX-XXX-XX-XXX=X.00005" this function
@@ -30,5 +31,16 @@ Public MustInherit Class PremisEntity
       End Using
     End Using
   End Sub
+
+  Public Function GetXmlDocument(pCont As PremisContainer) As XmlDocument
+    Dim ret As New XmlDocument
+
+    Using xmlwr As XmlWriter = ret.CreateNavigator.AppendChild()
+      Me.GetXML(xmlwr, pCont, True)
+      xmlwr.Close()
+    End Using
+
+    Return ret
+  End Function
 
 End Class
